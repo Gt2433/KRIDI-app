@@ -1,5 +1,6 @@
 {
-  "version": "1.0.2",
-  "downloadUrl": "https://github.com/Gt2433/KRIDI-app/releases/download/v1.0.2/KRIDI_app-release.apk",
-  "changelog": "• تجربة نظام التحديث التلقائي 🎉\n• تحسين الأداء وإصلاح الأخطاء"
+  "version": "2.0.0",
+  "downloadUrl": "https://github.com/Gt2433/KRIDI-app/releases/download/v2/kredi.apk",
+  "changelog": "• الوضع المظلم والمضيء (Dark & Light Mode) 🌙☀️\n• نظام الفيرسمو والدفع الجزئي للديون مع شريط التقدم 💰\n• تصدير ومشاركة تقرير PDF شامل لكل دين 📄\n• المعاملات والتقارير اليومية مع إمكانية التنقل بين الأيام 📅\n• إدارة وتخصيص التصنيفات وحذفها 🏷️\n• حماية التطبيق برمز PIN وبصمة الإصبع وبصمة الوجه عبر الكاميرا 🔒"
 }
+
