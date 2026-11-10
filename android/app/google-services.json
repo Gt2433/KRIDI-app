@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "313295007264",
+    "project_id": "kredi-e636c",
+    "storage_bucket": "kredi-e636c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:313295007264:android:73f76ebe33bd9b7c17d645",
+        "android_client_info": {
+          "package_name": "com.kredi.app.kredi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8a2kgWayfrPfjMcZoITr2MCvFaqmx8wM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+

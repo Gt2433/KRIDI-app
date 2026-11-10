@@ -4,6 +4,7 @@ import '../services/finance_service.dart';
 import '../services/settings_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/formatters.dart';
+import 'bouncing_button.dart';
 
 class AddEditDebtSheet extends StatefulWidget {
   final Debt? initialDebt;
@@ -41,6 +42,7 @@ class _AddEditDebtSheetState extends State<AddEditDebtSheet> {
   late TextEditingController _phoneController;
   late DateTime _selectedDate;
   late DebtType _type;
+  bool _isSaving = false;
 
   bool get isEditing => widget.initialDebt != null;
 
@@ -144,7 +146,7 @@ class _AddEditDebtSheetState extends State<AddEditDebtSheet> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -189,7 +191,12 @@ class _AddEditDebtSheetState extends State<AddEditDebtSheet> {
         FinanceService.instance.addDebt(debt);
       }
     }
-    Navigator.of(context).pop();
+
+    setState(() => _isSaving = true);
+    await Future.delayed(const Duration(milliseconds: 380));
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -556,24 +563,58 @@ class _AddEditDebtSheetState extends State<AddEditDebtSheet> {
                 ),
                 const SizedBox(height: 24),
 
-                // Submit Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: isDark ? Colors.white : Colors.black,
-                      foregroundColor: isDark ? Colors.black : Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
+                // Animated Submit Button with Success Feedback
+                BouncingButton(
+                  scaleFactor: 0.95,
+                  onTap: _isSaving ? null : _submit,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: _isSaving
+                          ? const Color(0xFF16A34A)
+                          : (isDark ? Colors.white : Colors.black),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (_isSaving ? const Color(0xFF16A34A) : (isDark ? Colors.white : Colors.black))
+                              .withAlpha(45),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: const Text(
-                      'حفظ',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                        child: _isSaving
+                            ? const Row(
+                                key: ValueKey('saved'),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'تم الحفظ بنجاح ✓',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                'حفظ',
+                                key: const ValueKey('save'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.black : Colors.white,
+                                ),
+                              ),
                       ),
                     ),
                   ),

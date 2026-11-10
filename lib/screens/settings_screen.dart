@@ -1,14 +1,20 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/auth_service.dart';
 import '../services/finance_service.dart';
 import '../services/security_service.dart';
 import '../services/settings_service.dart';
 import '../services/update_service.dart';
 import '../utils/app_strings.dart';
 import '../widgets/ambient_background.dart';
+import '../widgets/bouncing_button.dart';
 import '../widgets/brand_icons.dart';
-import '../widgets/face_scanner_dialog.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/profile_bottom_sheet.dart';
+import '../widgets/user_avatar.dart';
+import 'auth_screen.dart';
 import 'categories_screen.dart';
 import 'wallets_screen.dart';
 
@@ -44,9 +50,13 @@ class SettingsScreen extends StatelessWidget {
     final currentCurrency = SettingsService.currencyNotifier.value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB);
+    final borderCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE5E7EB);
     final textCol = isDark ? Colors.white : Colors.black;
-    final dividerCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFF3F4F6);
+    final dividerCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFF3F4F6);
 
     showModalBottomSheet(
       context: context,
@@ -58,12 +68,7 @@ class SettingsScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: sheetBg,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: borderCol,
-                width: 1.2,
-              ),
-            ),
+            border: Border(top: BorderSide(color: borderCol, width: 1.2)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -79,28 +84,44 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'اختر عملة الحساب',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textCol),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textCol,
+                ),
               ),
               const SizedBox(height: 16),
               Expanded(
                 child: ListView.separated(
                   itemCount: SettingsService.availableCurrencies.length,
-                  separatorBuilder: (_, _) => Divider(height: 1, color: dividerCol),
+                  separatorBuilder: (_, _) =>
+                      Divider(height: 1, color: dividerCol),
                   itemBuilder: (context, index) {
                     final curr = SettingsService.availableCurrencies[index];
                     final isSelected = curr['symbol'] == currentCurrency;
                     return ListTile(
-                      title: Text(curr['name']!, style: TextStyle(fontWeight: FontWeight.w600, color: textCol)),
+                      title: Text(
+                        curr['name']!,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: textCol,
+                        ),
+                      ),
                       trailing: Text(
                         curr['symbol']!,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isSelected ? (isDark ? Colors.white : Colors.black) : Colors.grey,
+                          color: isSelected
+                              ? (isDark ? Colors.white : Colors.black)
+                              : Colors.grey,
                         ),
                       ),
                       leading: isSelected
-                          ? Icon(Icons.check_circle_rounded, color: isDark ? Colors.white : Colors.black)
+                          ? Icon(
+                              Icons.check_circle_rounded,
+                              color: isDark ? Colors.white : Colors.black,
+                            )
                           : const SizedBox(width: 24),
                       onTap: () {
                         SettingsService.setCurrency(curr['symbol']!);
@@ -123,7 +144,9 @@ class SettingsScreen extends StatelessWidget {
     final isAlreadyEnabled = SettingsService.pinEnabledNotifier.value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB);
+    final borderCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE5E7EB);
     final textCol = isDark ? Colors.white : Colors.black;
 
     showDialog(
@@ -133,12 +156,12 @@ class SettingsScreen extends StatelessWidget {
         backgroundColor: dialogBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: BorderSide(
-            color: borderCol,
-            width: 1.2,
-          ),
+          side: BorderSide(color: borderCol, width: 1.2),
         ),
-        title: Text(isAlreadyEnabled ? 'رمز PIN' : 'تعيين رمز PIN', style: TextStyle(color: textCol, fontWeight: FontWeight.bold)),
+        title: Text(
+          isAlreadyEnabled ? 'رمز PIN' : 'تعيين رمز PIN',
+          style: TextStyle(color: textCol, fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +170,10 @@ class SettingsScreen extends StatelessWidget {
               isAlreadyEnabled
                   ? 'التطبيق مقفل حالياً برمز. هل ترغب بإلغائه أو كتابة رمز جديد؟'
                   : 'أدخل 4 أرقام لحماية التطبيق برمز سري عند كل فتح:',
-              style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFFA1A1AA) : Colors.grey),
+              style: TextStyle(
+                fontSize: 13,
+                color: isDark ? const Color(0xFFA1A1AA) : Colors.grey,
+              ),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -185,14 +211,26 @@ class SettingsScreen extends StatelessWidget {
                 Navigator.pop(ctx);
                 await SettingsService.removePin();
                 messenger.showSnackBar(
-                  const SnackBar(content: Text('تم إلغاء رمز PIN وتعطيل خيارات الأمان')),
+                  const SnackBar(
+                    content: Text('تم إلغاء رمز PIN وتعطيل خيارات الأمان'),
+                  ),
                 );
               },
-              child: const Text('إلغاء القفل', style: TextStyle(color: Color(0xFFDC2626))),
+              child: const Text(
+                'إلغاء القفل',
+                style: TextStyle(color: Color(0xFFDC2626)),
+              ),
             ),
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: TextStyle(color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280))),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                color: isDark
+                    ? const Color(0xFFA1A1AA)
+                    : const Color(0xFF6B7280),
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -212,7 +250,9 @@ class SettingsScreen extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: isDark ? Colors.white : Colors.black,
               foregroundColor: isDark ? Colors.black : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
             child: const Text('حفظ'),
           ),
@@ -224,7 +264,9 @@ class SettingsScreen extends StatelessWidget {
   void _promptPinRequired(BuildContext context, String featureName) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final dialogBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB);
+    final borderCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE5E7EB);
     final textCol = isDark ? Colors.white : Colors.black;
 
     showDialog(
@@ -240,23 +282,43 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Icon(Icons.shield_outlined, color: textCol, size: 24),
             const SizedBox(width: 8),
-            Text('رمز PIN مطلوب أولاً', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textCol)),
+            Text(
+              'رمز PIN مطلوب أولاً',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: textCol,
+              ),
+            ),
           ],
         ),
         content: Text(
           'لا يمكن تفعيل $featureName بدون تعيين رمز PIN أولاً. يعتبر رمز PIN هو وسيلة الأمان الأساسية والبديلة دائماً.',
-          style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF4B5563), height: 1.5),
+          style: TextStyle(
+            fontSize: 13,
+            color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF4B5563),
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('إلغاء', style: TextStyle(color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280))),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(
+                color: isDark
+                    ? const Color(0xFFA1A1AA)
+                    : const Color(0xFF6B7280),
+              ),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: isDark ? Colors.white : Colors.black,
               foregroundColor: isDark ? Colors.black : Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             onPressed: () {
               Navigator.pop(ctx);
@@ -296,7 +358,9 @@ class SettingsScreen extends StatelessWidget {
   void _showLanguageBottomSheet(BuildContext context, String currentLangCode) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB);
+    final borderCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE5E7EB);
     final textCol = isDark ? Colors.white : Colors.black;
 
     showModalBottomSheet(
@@ -309,12 +373,7 @@ class SettingsScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: sheetBg,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: borderCol,
-                width: 1.2,
-              ),
-            ),
+            border: Border(top: BorderSide(color: borderCol, width: 1.2)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -330,7 +389,11 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 AppStrings.tr(context, 'select_language'),
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textCol),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textCol,
+                ),
               ),
               const SizedBox(height: 16),
               _buildBottomSheetOption(
@@ -378,7 +441,9 @@ class SettingsScreen extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final activeTextCol = isDark ? Colors.white : Colors.black;
-    final inactiveTextCol = isDark ? const Color(0xFFA1A1AA) : const Color(0xFF4B5563);
+    final inactiveTextCol = isDark
+        ? const Color(0xFFA1A1AA)
+        : const Color(0xFF4B5563);
 
     return Material(
       color: Colors.transparent,
@@ -393,11 +458,7 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
         trailing: isSelected
-            ? Icon(
-                Icons.check_circle_rounded,
-                color: activeTextCol,
-                size: 22,
-              )
+            ? Icon(Icons.check_circle_rounded, color: activeTextCol, size: 22)
             : null,
         onTap: onTap,
       ),
@@ -419,7 +480,9 @@ class SettingsScreen extends StatelessWidget {
   void _showDeveloperProfileBottomSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB);
+    final borderCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE5E7EB);
     final textCol = isDark ? Colors.white : Colors.black;
     final chipBg = isDark ? const Color(0xFF27272A) : const Color(0xFFF3F4F6);
 
@@ -434,12 +497,7 @@ class SettingsScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: sheetBg,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: borderCol,
-                width: 1.2,
-              ),
-            ),
+            border: Border(top: BorderSide(color: borderCol, width: 1.2)),
           ),
           child: SingleChildScrollView(
             child: Column(
@@ -459,9 +517,7 @@ class SettingsScreen extends StatelessWidget {
                             'cover.png',
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: Colors.black,
-                              );
+                              return Container(color: Colors.black);
                             },
                           ),
                           Container(
@@ -469,7 +525,11 @@ class SettingsScreen extends StatelessWidget {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Colors.black.withAlpha(60), Colors.black.withAlpha(10), Colors.transparent],
+                                colors: [
+                                  Colors.black.withAlpha(60),
+                                  Colors.black.withAlpha(10),
+                                  Colors.transparent,
+                                ],
                               ),
                             ),
                           ),
@@ -487,7 +547,11 @@ class SettingsScreen extends StatelessWidget {
                           onTap: () => Navigator.of(context).pop(),
                           child: const Padding(
                             padding: EdgeInsets.all(8),
-                            child: Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
                       ),
@@ -499,7 +563,13 @@ class SettingsScreen extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: sheetBg,
                           shape: BoxShape.circle,
-                          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: ClipOval(
                           child: SizedBox(
@@ -512,7 +582,14 @@ class SettingsScreen extends StatelessWidget {
                                 return Container(
                                   color: Colors.black,
                                   child: const Center(
-                                    child: Text('MB', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold)),
+                                    child: Text(
+                                      'MB',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 );
                               },
@@ -526,11 +603,18 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 54),
                 Text(
                   AppStrings.tr(context, 'developer_name'),
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: textCol),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: textCol,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: chipBg,
                     borderRadius: BorderRadius.circular(20),
@@ -538,7 +622,11 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   child: Text(
                     AppStrings.tr(context, 'developer_title'),
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textCol),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: textCol,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -553,9 +641,13 @@ class SettingsScreen extends StatelessWidget {
   void _showContactUsBottomSheet(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? const Color(0xFF1E1E1E) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFE5E7EB);
+    final borderCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFE5E7EB);
     final textCol = isDark ? Colors.white : Colors.black;
-    final subTextCol = isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280);
+    final subTextCol = isDark
+        ? const Color(0xFFA1A1AA)
+        : const Color(0xFF6B7280);
 
     showModalBottomSheet(
       context: context,
@@ -567,12 +659,7 @@ class SettingsScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: sheetBg,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: borderCol,
-                width: 1.2,
-              ),
-            ),
+            border: Border(top: BorderSide(color: borderCol, width: 1.2)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -588,31 +675,57 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 AppStrings.tr(context, 'contact_dialog_title'),
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textCol),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textCol,
+                ),
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.chat_rounded, color: Color(0xFF25D366)),
-                title: Text('واتساب (WhatsApp)', style: TextStyle(color: textCol)),
-                subtitle: Text('0655603829', style: TextStyle(color: subTextCol)),
+                leading: const Icon(
+                  Icons.chat_rounded,
+                  color: Color(0xFF25D366),
+                ),
+                title: Text(
+                  'واتساب (WhatsApp)',
+                  style: TextStyle(color: textCol),
+                ),
+                subtitle: Text(
+                  '0655603829',
+                  style: TextStyle(color: subTextCol),
+                ),
                 onTap: () => _launchWhatsApp('0655603829'),
               ),
               ListTile(
                 leading: const Icon(Icons.email_outlined, color: Colors.red),
-                title: Text('البريد الإلكتروني', style: TextStyle(color: textCol)),
-                subtitle: Text('hhcgjvhcnk1@gmail.com', style: TextStyle(color: subTextCol)),
+                title: Text(
+                  'البريد الإلكتروني',
+                  style: TextStyle(color: textCol),
+                ),
+                subtitle: Text(
+                  'hhcgjvhcnk1@gmail.com',
+                  style: TextStyle(color: subTextCol),
+                ),
                 onTap: () => _launchEmail('hhcgjvhcnk1@gmail.com'),
               ),
               ListTile(
                 leading: const InstagramIcon(size: 22),
                 title: Text('Instagram', style: TextStyle(color: textCol)),
-                subtitle: Text('@moh_bah_dev', style: TextStyle(color: subTextCol)),
-                onTap: () => _launchUrl('https://www.instagram.com/moh_bah_dev/'),
+                subtitle: Text(
+                  '@moh_bah_dev',
+                  style: TextStyle(color: subTextCol),
+                ),
+                onTap: () =>
+                    _launchUrl('https://www.instagram.com/moh_bah_dev/'),
               ),
               ListTile(
                 leading: TikTokIcon(size: 22, color: textCol),
                 title: Text('TikTok', style: TextStyle(color: textCol)),
-                subtitle: Text('@mbd_dev1', style: TextStyle(color: subTextCol)),
+                subtitle: Text(
+                  '@mbd_dev1',
+                  style: TextStyle(color: subTextCol),
+                ),
                 onTap: () => _launchUrl('https://www.tiktok.com/@mbd_dev1'),
               ),
               const SizedBox(height: 10),
@@ -627,7 +740,9 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textCol = isDark ? Colors.white : Colors.black;
-    final dividerCol = isDark ? const Color(0xFF2E2E2E) : const Color(0xFFF3F4F6);
+    final dividerCol = isDark
+        ? const Color(0xFF2E2E2E)
+        : const Color(0xFFF3F4F6);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -648,6 +763,151 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // TOP PROFILE / AUTH BUTTON
+                ValueListenableBuilder<User?>(
+                  valueListenable: AuthService.userNotifier,
+                  builder: (context, user, _) {
+                    final isLogged = user != null;
+                    final displayName = user?.displayName?.isNotEmpty == true
+                        ? user!.displayName!
+                        : (user?.email?.split('@').first ?? 'مستخدم كريدي');
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 22),
+                      child: BouncingButton(
+                        scaleFactor: 0.97,
+                        onTap: () {
+                          if (isLogged) {
+                            ProfileBottomSheet.show(context, user);
+                          } else {
+                            AuthScreen.show(context);
+                          }
+                        },
+                        child: GlassContainer(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          borderRadius: BorderRadius.circular(22),
+                          child: Row(
+                            children: [
+                              // Avatar / Icon
+                              isLogged
+                                  ? UserAvatar(
+                                      size: 48,
+                                      photoUrl: user.photoURL,
+                                      name: displayName,
+                                    )
+                                  : Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6),
+                                        border: Border.all(
+                                          color: isDark ? const Color(0xFF3F3F46) : const Color(0xFFE5E7EB),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.person_add_alt_1_rounded,
+                                          color: isDark ? Colors.white : Colors.black,
+                                          size: 22,
+                                        ),
+                                      ),
+                                    ),
+                              const SizedBox(width: 14),
+
+                              // Name & Status
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      isLogged ? displayName : 'تسجيل الدخول / إنشاء حساب',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: textCol,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Row(
+                                      children: [
+                                        if (isLogged) ...[
+                                          const Icon(Icons.cloud_done_rounded, size: 14, color: Color(0xFF16A34A)),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              user.email ?? 'متصل بالسحابة',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ] else ...[
+                                          Expanded(
+                                            child: Text(
+                                              'لحفظ بياناتك وإعداداتك في السحابة',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Action Pill Button
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                decoration: BoxDecoration(
+                                  color: isLogged
+                                      ? (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF3F4F6))
+                                      : (isDark ? Colors.white : Colors.black),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      isLogged ? 'البروفايل' : 'دخول',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isLogged
+                                            ? textCol
+                                            : (isDark ? Colors.black : Colors.white),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 10,
+                                      color: isLogged
+                                          ? textCol
+                                          : (isDark ? Colors.black : Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+
                 // SECTION 1: المالية
                 _buildSectionTitle(context, 'المالية'),
                 const SizedBox(height: 10),
@@ -669,7 +929,12 @@ class SettingsScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16, color: dividerCol),
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: dividerCol,
+                      ),
 
                       // Wallets Management
                       _buildSettingTile(
@@ -679,11 +944,18 @@ class SettingsScreen extends StatelessWidget {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const WalletsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const WalletsScreen(),
+                            ),
                           );
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16, color: dividerCol),
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: dividerCol,
+                      ),
 
                       // Categories Management
                       _buildSettingTile(
@@ -694,11 +966,18 @@ class SettingsScreen extends StatelessWidget {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const CategoriesScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const CategoriesScreen(),
+                            ),
                           );
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16, color: dividerCol),
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: dividerCol,
+                      ),
 
                       // Export to Excel / CSV
                       _buildSettingTile(
@@ -734,54 +1013,20 @@ class SettingsScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16, color: dividerCol),
-
-                      // Face Unlock (سكان وإضافة وجهك بالكاميرا)
-                      ValueListenableBuilder<bool>(
-                        valueListenable: SettingsService.pinEnabledNotifier,
-                        builder: (context, pinEnabled, _) {
-                          return ValueListenableBuilder<bool>(
-                            valueListenable: SettingsService.faceEnrolledNotifier,
-                            builder: (context, isEnrolled, _) {
-                              final subtitle = !pinEnabled
-                                  ? 'يتطلب رمز PIN أولاً'
-                                  : (isEnrolled ? 'تم تسجيل الوجه ✓' : 'إضافة وجهك (مسح الكاميرا)');
-                              return _buildSettingTile(
-                                context,
-                                icon: Icons.face_unlock_rounded,
-                                title: 'بصمة الوجه',
-                                subtitle: subtitle,
-                                onTap: () async {
-                                  if (!SettingsService.hasPin) {
-                                    _promptPinRequired(context, 'بصمة الوجه');
-                                    return;
-                                  }
-                                  final enrolled = await FaceScannerDialog.show(
-                                    context,
-                                    mode: FaceScannerMode.enroll,
-                                  );
-                                  if (enrolled == true && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('تمت إضافة بصمة وجهك بنجاح بالكاميرا! ✓'),
-                                        backgroundColor: Color(0xFF16A34A),
-                                      ),
-                                    );
-                                  }
-                                },
-                              );
-                            },
-                          );
-                        },
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: dividerCol,
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16, color: dividerCol),
 
                       // Fingerprint
                       ValueListenableBuilder<bool>(
                         valueListenable: SettingsService.pinEnabledNotifier,
                         builder: (context, pinEnabled, _) {
                           return ValueListenableBuilder<bool>(
-                            valueListenable: SettingsService.fingerprintEnabledNotifier,
+                            valueListenable:
+                                SettingsService.fingerprintEnabledNotifier,
                             builder: (context, fpEnabled, _) {
                               final subtitle = !pinEnabled
                                   ? 'يتطلب رمز PIN أولاً'
@@ -797,22 +1042,37 @@ class SettingsScreen extends StatelessWidget {
                                     return;
                                   }
                                   if (fpEnabled) {
-                                    await SettingsService.setFingerprintEnabled(false);
+                                    await SettingsService.setFingerprintEnabled(
+                                      false,
+                                    );
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('تم تعطيل الدخول ببصمة الإصبع')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'تم تعطيل الدخول ببصمة الإصبع',
+                                          ),
+                                        ),
                                       );
                                     }
                                   } else {
-                                    final success = await SecurityService.authenticateWithBiometrics(
-                                      reason: 'تأكيد بصمة الإصبع للتفعيل',
-                                    );
+                                    final success =
+                                        await SecurityService.authenticateWithBiometrics(
+                                          reason: 'تأكيد بصمة الإصبع للتفعيل',
+                                        );
                                     if (success) {
-                                      await SettingsService.setFingerprintEnabled(true);
+                                      await SettingsService.setFingerprintEnabled(
+                                        true,
+                                      );
                                       if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('تم تفعيل بصمة الإصبع بنجاح ✓'),
+                                            content: Text(
+                                              'تم تفعيل بصمة الإصبع بنجاح ✓',
+                                            ),
                                             backgroundColor: Color(0xFF16A34A),
                                           ),
                                         );
@@ -831,7 +1091,10 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // SECTION 3: PREFERENCES (Theme & Language)
-                _buildSectionTitle(context, AppStrings.tr(context, 'section_preferences')),
+                _buildSectionTitle(
+                  context,
+                  AppStrings.tr(context, 'section_preferences'),
+                ),
                 const SizedBox(height: 10),
                 GlassContainer(
                   padding: EdgeInsets.zero,
@@ -845,15 +1108,21 @@ class SettingsScreen extends StatelessWidget {
                           final isDarkMode = themeMode == ThemeMode.dark;
                           return _buildSettingTile(
                             context,
-                            icon: isDarkMode ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+                            icon: isDarkMode
+                                ? Icons.nightlight_round
+                                : Icons.wb_sunny_rounded,
                             title: 'المظهر',
-                            subtitle: isDarkMode ? 'الوضع المظلم 🌙' : 'الوضع المضيء ☀️',
+                            subtitle: isDarkMode
+                                ? 'الوضع المظلم 🌙'
+                                : 'الوضع المضيء ☀️',
                             trailing: Switch.adaptive(
                               value: isDarkMode,
                               activeThumbColor: Colors.white,
                               activeTrackColor: const Color(0xFF3B82F6),
                               onChanged: (val) {
-                                SettingsService.setThemeMode(val ? ThemeMode.dark : ThemeMode.light);
+                                SettingsService.setThemeMode(
+                                  val ? ThemeMode.dark : ThemeMode.light,
+                                );
                               },
                             ),
                             onTap: () {
@@ -862,7 +1131,12 @@ class SettingsScreen extends StatelessWidget {
                           );
                         },
                       ),
-                      Divider(height: 1, indent: 56, endIndent: 16, color: dividerCol),
+                      Divider(
+                        height: 1,
+                        indent: 56,
+                        endIndent: 16,
+                        color: dividerCol,
+                      ),
 
                       // Language
                       ValueListenableBuilder<Locale>(
@@ -872,8 +1146,14 @@ class SettingsScreen extends StatelessWidget {
                             context,
                             icon: Icons.language_rounded,
                             title: AppStrings.tr(context, 'language'),
-                            subtitle: _getLanguageText(context, currentLocale.languageCode),
-                            onTap: () => _showLanguageBottomSheet(context, currentLocale.languageCode),
+                            subtitle: _getLanguageText(
+                              context,
+                              currentLocale.languageCode,
+                            ),
+                            onTap: () => _showLanguageBottomSheet(
+                              context,
+                              currentLocale.languageCode,
+                            ),
                           );
                         },
                       ),
@@ -883,7 +1163,10 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // SECTION 4: ABOUT KREDI
-                _buildSectionTitle(context, AppStrings.tr(context, 'section_about')),
+                _buildSectionTitle(
+                  context,
+                  AppStrings.tr(context, 'section_about'),
+                ),
                 const SizedBox(height: 10),
                 GlassContainer(
                   padding: const EdgeInsets.all(18),
@@ -896,7 +1179,9 @@ class SettingsScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF27272A) : const Color(0xFFF3F4F6),
+                              color: isDark
+                                  ? const Color(0xFF27272A)
+                                  : const Color(0xFFF3F4F6),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Icon(
@@ -912,12 +1197,25 @@ class SettingsScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   'أموالي',
-                                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: textCol),
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: textCol,
+                                  ),
                                 ),
                                 const SizedBox(height: 2),
-                                const Text(
-                                  'الإصدار 2.0',
-                                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                                FutureBuilder<PackageInfo>(
+                                  future: PackageInfo.fromPlatform(),
+                                  builder: (context, snapshot) {
+                                    final ver = snapshot.data?.version ?? '2.5';
+                                    return Text(
+                                      'الإصدار $ver',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -928,21 +1226,39 @@ class SettingsScreen extends StatelessWidget {
                       Divider(height: 1, color: dividerCol),
                       const SizedBox(height: 8),
                       InkWell(
-                        onTap: () => UpdateService.checkForUpdate(context, isManualCheck: true),
+                        onTap: () => UpdateService.checkForUpdate(
+                          context,
+                          isManualCheck: true,
+                        ),
                         borderRadius: BorderRadius.circular(10),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
                           child: Row(
                             children: [
-                              Icon(Icons.sync_rounded, size: 18, color: textCol),
+                              Icon(
+                                Icons.sync_rounded,
+                                size: 18,
+                                color: textCol,
+                              ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   'فحص التحديثات',
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: textCol),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: textCol,
+                                  ),
                                 ),
                               ),
-                              const Icon(Icons.chevron_left_rounded, size: 18, color: Colors.grey),
+                              const Icon(
+                                Icons.chevron_left_rounded,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
                             ],
                           ),
                         ),
@@ -953,13 +1269,19 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // SECTION 5: DEVELOPER & CONTACT
-                _buildSectionTitle(context, AppStrings.tr(context, 'section_developer')),
+                _buildSectionTitle(
+                  context,
+                  AppStrings.tr(context, 'section_developer'),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
                     Expanded(
                       child: GlassContainer(
-                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 12,
+                        ),
                         borderRadius: BorderRadius.circular(22),
                         onTap: () => _showDeveloperProfileBottomSheet(context),
                         child: Column(
@@ -967,15 +1289,25 @@ class SettingsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF27272A) : const Color(0xFFF3F4F6),
+                                color: isDark
+                                    ? const Color(0xFF27272A)
+                                    : const Color(0xFFF3F4F6),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.person_rounded, color: textCol, size: 26),
+                              child: Icon(
+                                Icons.person_rounded,
+                                color: textCol,
+                                size: 26,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               AppStrings.tr(context, 'developer_button'),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textCol),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: textCol,
+                              ),
                             ),
                           ],
                         ),
@@ -984,7 +1316,10 @@ class SettingsScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: GlassContainer(
-                        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                          horizontal: 12,
+                        ),
                         borderRadius: BorderRadius.circular(22),
                         onTap: () => _showContactUsBottomSheet(context),
                         child: Column(
@@ -992,15 +1327,25 @@ class SettingsScreen extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF27272A) : const Color(0xFFF3F4F6),
+                                color: isDark
+                                    ? const Color(0xFF27272A)
+                                    : const Color(0xFFF3F4F6),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.headset_mic_rounded, color: textCol, size: 26),
+                              child: Icon(
+                                Icons.headset_mic_rounded,
+                                color: textCol,
+                                size: 26,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text(
                               AppStrings.tr(context, 'contact_us_button'),
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textCol),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: textCol,
+                              ),
                             ),
                           ],
                         ),
@@ -1034,12 +1379,14 @@ class SettingsScreen extends StatelessWidget {
     required String title,
     String? subtitle,
     Widget? trailing,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textCol = isDark ? Colors.white : Colors.black;
     final iconBg = isDark ? const Color(0xFF27272A) : const Color(0xFFF3F4F6);
-    final subTextCol = isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280);
+    final subTextCol = isDark
+        ? const Color(0xFFA1A1AA)
+        : const Color(0xFF6B7280);
 
     return InkWell(
       onTap: onTap,
@@ -1084,7 +1431,9 @@ class SettingsScreen extends StatelessWidget {
               Icon(
                 Icons.chevron_left_rounded,
                 size: 20,
-                color: isDark ? const Color(0xFF71717A) : const Color(0xFF9CA3AF),
+                color: isDark
+                    ? const Color(0xFF71717A)
+                    : const Color(0xFF9CA3AF),
               ),
           ],
         ),

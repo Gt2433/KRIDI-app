@@ -4,6 +4,7 @@ import '../models/transaction_model.dart';
 import '../theme/app_theme.dart';
 import 'add_edit_debt_sheet.dart';
 import 'add_edit_transaction_sheet.dart';
+import 'bouncing_button.dart';
 
 class ActionChoiceSheet extends StatelessWidget {
   const ActionChoiceSheet({super.key});
@@ -67,78 +68,96 @@ class ActionChoiceSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 18),
 
-                // Choice Grid
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildChoiceCard(
-                        context: context,
-                        title: 'مصروف',
-                        color: const Color(0xFFEF4444),
-                        icon: Icons.arrow_downward_rounded,
-                        isDark: isDark,
-                        onTap: () {
-                          Navigator.pop(context);
-                          AddEditTransactionSheet.show(
-                            context,
-                            initialType: TransactionType.expense,
-                          );
-                        },
+                // Choice Grid with Staggered Entrance Animation
+                TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 320),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, val, child) {
+                    return Opacity(
+                      opacity: val,
+                      child: Transform.translate(
+                        offset: Offset(0, (1 - val) * 16),
+                        child: child,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildChoiceCard(
-                        context: context,
-                        title: 'دخل',
-                        color: const Color(0xFF10B981),
-                        icon: Icons.arrow_upward_rounded,
-                        isDark: isDark,
-                        onTap: () {
-                          Navigator.pop(context);
-                          AddEditTransactionSheet.show(
-                            context,
-                            initialType: TransactionType.income,
-                          );
-                        },
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildChoiceCard(
+                              context: context,
+                              title: 'مصروف',
+                              color: const Color(0xFFEF4444),
+                              icon: Icons.arrow_downward_rounded,
+                              isDark: isDark,
+                              onTap: () {
+                                Navigator.pop(context);
+                                AddEditTransactionSheet.show(
+                                  context,
+                                  initialType: TransactionType.expense,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildChoiceCard(
+                              context: context,
+                              title: 'دخل',
+                              color: const Color(0xFF10B981),
+                              icon: Icons.arrow_upward_rounded,
+                              isDark: isDark,
+                              onTap: () {
+                                Navigator.pop(context);
+                                AddEditTransactionSheet.show(
+                                  context,
+                                  initialType: TransactionType.income,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildChoiceCard(
-                        context: context,
-                        title: 'تحويل',
-                        color: const Color(0xFF3B82F6),
-                        icon: Icons.swap_horiz_rounded,
-                        isDark: isDark,
-                        onTap: () {
-                          Navigator.pop(context);
-                          AddEditTransactionSheet.show(
-                            context,
-                            initialType: TransactionType.transfer,
-                          );
-                        },
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildChoiceCard(
+                              context: context,
+                              title: 'أخذ / تحويل',
+                              color: const Color(0xFF3B82F6),
+                              icon: Icons.swap_horiz_rounded,
+                              isDark: isDark,
+                              onTap: () {
+                                Navigator.pop(context);
+                                AddEditTransactionSheet.show(
+                                  context,
+                                  initialType: TransactionType.transfer,
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildChoiceCard(
+                              context: context,
+                              title: 'دَين',
+                              color: const Color(0xFF8B5CF6),
+                              icon: Icons.handshake_rounded,
+                              isDark: isDark,
+                              onTap: () {
+                                Navigator.pop(context);
+                                AddEditDebtSheet.show(context);
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildChoiceCard(
-                        context: context,
-                        title: 'دَين',
-                        color: const Color(0xFF8B5CF6),
-                        icon: Icons.handshake_rounded,
-                        isDark: isDark,
-                        onTap: () {
-                          Navigator.pop(context);
-                          AddEditDebtSheet.show(context);
-                        },
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -157,50 +176,47 @@ class ActionChoiceSheet extends StatelessWidget {
     required bool isDark,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withAlpha(isDark ? 28 : 20),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: color.withAlpha(isDark ? 65 : 75),
-              width: 1.2,
+    return BouncingButton(
+      scaleFactor: 0.94,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withAlpha(isDark ? 28 : 20),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: color.withAlpha(isDark ? 65 : 75),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withAlpha(80),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(icon, color: Colors.white, size: 18),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withAlpha(80),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : color.withAlpha(240),
               ),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : color.withAlpha(240),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

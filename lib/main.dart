@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'screens/main_nav_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'screens/app_gate.dart';
+import 'services/auth_service.dart';
 import 'services/category_service.dart';
 import 'services/finance_service.dart';
 import 'services/settings_service.dart';
+import 'services/sync_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    AuthService.instance.init();
+    await SyncService.instance.sync();
+  } catch (e) {
+    debugPrint('Firebase init error: $e');
+  }
   await SettingsService.init();
   await CategoryService.init();
   await FinanceService.instance.init();
@@ -41,7 +54,7 @@ class KrediApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          home: const MainNavScreen(),
+          home: const AppGate(),
         );
       },
     );

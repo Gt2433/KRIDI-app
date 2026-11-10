@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'sync_service.dart';
 
 class SettingsService {
   static const String _keyThemeMode = 'kredi_theme_mode';
@@ -8,8 +9,6 @@ class SettingsService {
   static const String _keyHideBalance = 'kredi_hide_balance';
   static const String _keyPinCode = 'kredi_security_pin';
   static const String _keyPinEnabled = 'kredi_pin_enabled';
-  static const String _keyFaceEnrolled = 'kredi_face_enrolled';
-  static const String _keyFaceAuthEnabled = 'kredi_face_auth_enabled';
   static const String _keyFingerprintEnabled = 'kredi_fingerprint_enabled';
 
   static ValueNotifier<ThemeMode> themeModeNotifier = ValueNotifier(ThemeMode.light);
@@ -17,8 +16,6 @@ class SettingsService {
   static ValueNotifier<String> currencyNotifier = ValueNotifier('د.ج');
   static ValueNotifier<bool> hideBalanceNotifier = ValueNotifier(false);
   static ValueNotifier<bool> pinEnabledNotifier = ValueNotifier(false);
-  static ValueNotifier<bool> faceEnrolledNotifier = ValueNotifier(false);
-  static ValueNotifier<bool> faceAuthEnabledNotifier = ValueNotifier(false);
   static ValueNotifier<bool> fingerprintEnabledNotifier = ValueNotifier(false);
 
   static String _savedPin = '';
@@ -61,14 +58,10 @@ class SettingsService {
     final pinEnabled = prefs.getBool(_keyPinEnabled) ?? false;
     pinEnabledNotifier.value = pinEnabled && _savedPin.isNotEmpty;
 
-    // Load Face & Fingerprint settings (only valid if PIN is configured)
+    // Load Fingerprint settings (only valid if PIN is configured)
     if (pinEnabledNotifier.value) {
-      faceEnrolledNotifier.value = prefs.getBool(_keyFaceEnrolled) ?? false;
-      faceAuthEnabledNotifier.value = prefs.getBool(_keyFaceAuthEnabled) ?? false;
       fingerprintEnabledNotifier.value = prefs.getBool(_keyFingerprintEnabled) ?? false;
     } else {
-      faceEnrolledNotifier.value = false;
-      faceAuthEnabledNotifier.value = false;
       fingerprintEnabledNotifier.value = false;
       isUnlockedThisSession = true;
     }
@@ -78,6 +71,7 @@ class SettingsService {
     themeModeNotifier.value = mode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyThemeMode, mode == ThemeMode.dark ? 'dark' : 'light');
+    _notifySettingsChanged();
   }
 
   static Future<void> toggleThemeMode() async {
@@ -89,12 +83,14 @@ class SettingsService {
     localeNotifier.value = locale;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyLocale, locale.languageCode);
+    _notifySettingsChanged();
   }
 
   static Future<void> setCurrency(String symbol) async {
     currencyNotifier.value = symbol;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_keyCurrency, symbol);
+    _notifySettingsChanged();
   }
 
   static Future<void> toggleHideBalance() async {
@@ -102,6 +98,57 @@ class SettingsService {
     hideBalanceNotifier.value = newVal;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyHideBalance, newVal);
+    _notifySettingsChanged();
+  }
+
+  /// Export user settings into a JSON-serializable Map for cloud sync
+  static Map<String, dynamic> exportSettingsMap() {
+    return {
+      'themeMode': themeModeNotifier.value == ThemeMode.dark ? 'dark' : 'light',
+      'locale': localeNotifier.value.languageCode,
+      'currency': currencyNotifier.value,
+      'hideBalance': hideBalanceNotifier.value,
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+  }
+
+  /// Import user settings from cloud map and apply to preferences and active state
+  static Future<void> importSettingsMap(Map<String, dynamic> map) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      if (map['themeMode'] is String) {
+        final themeStr = map['themeMode'] as String;
+        themeModeNotifier.value = themeStr == 'dark' ? ThemeMode.dark : ThemeMode.light;
+        await prefs.setString(_keyThemeMode, themeStr);
+      }
+
+      if (map['locale'] is String) {
+        final langStr = map['locale'] as String;
+        localeNotifier.value = Locale(langStr);
+        await prefs.setString(_keyLocale, langStr);
+      }
+
+      if (map['currency'] is String) {
+        final curr = map['currency'] as String;
+        currencyNotifier.value = curr;
+        await prefs.setString(_keyCurrency, curr);
+      }
+
+      if (map['hideBalance'] is bool) {
+        final hide = map['hideBalance'] as bool;
+        hideBalanceNotifier.value = hide;
+        await prefs.setBool(_keyHideBalance, hide);
+      }
+    } catch (e) {
+      debugPrint('Error importing settings map: $e');
+    }
+  }
+
+  static void _notifySettingsChanged() {
+    try {
+      SyncService.instance.saveSettingsToCloud(exportSettingsMap());
+    } catch (_) {}
   }
 
   static bool checkPin(String enteredPin) {
@@ -115,8 +162,6 @@ class SettingsService {
       pinEnabledNotifier.value = false;
       await prefs.remove(_keyPinCode);
       await prefs.setBool(_keyPinEnabled, false);
-      await setFaceEnrolled(false);
-      await setFaceAuthEnabled(false);
       await setFingerprintEnabled(false);
       isUnlockedThisSession = true;
     } else {
@@ -130,18 +175,6 @@ class SettingsService {
 
   static Future<void> removePin() async {
     await setPin('');
-  }
-
-  static Future<void> setFaceEnrolled(bool val) async {
-    faceEnrolledNotifier.value = val;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyFaceEnrolled, val);
-  }
-
-  static Future<void> setFaceAuthEnabled(bool val) async {
-    faceAuthEnabledNotifier.value = val;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_keyFaceAuthEnabled, val);
   }
 
   static Future<void> setFingerprintEnabled(bool val) async {

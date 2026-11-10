@@ -10,6 +10,7 @@ import '../models/transaction_model.dart';
 import '../models/wallet_model.dart';
 import '../models/budget_model.dart';
 import 'storage_service.dart';
+import 'sync_service.dart';
 
 class FinanceService extends ChangeNotifier {
   static final FinanceService instance = FinanceService._internal();
@@ -18,11 +19,13 @@ class FinanceService extends ChangeNotifier {
   static const String _keyTransactions = 'kredi_transactions_v1';
   static const String _keyWallets = 'kredi_wallets_v1';
   static const String _keyBudgets = 'kredi_budgets_v1';
+  static const String _keySelectedMainSpaceId = 'kredi_selected_main_space_id';
 
   List<TransactionModel> _transactions = [];
   List<WalletModel> _wallets = [];
   List<BudgetModel> _budgets = [];
   List<Debt> _debts = [];
+  String? _selectedMainSpaceId;
   bool _isInitialized = false;
 
   List<TransactionModel> get transactions => List.unmodifiable(_transactions);
@@ -30,6 +33,25 @@ class FinanceService extends ChangeNotifier {
   List<BudgetModel> get budgets => List.unmodifiable(_budgets);
   List<Debt> get debts => List.unmodifiable(_debts);
   bool get isInitialized => _isInitialized;
+
+  String get selectedMainSpaceId => _selectedMainSpaceId ?? (_wallets.isNotEmpty ? _wallets.first.id : 'cash');
+
+  WalletModel get selectedMainSpace {
+    return _wallets.firstWhere(
+      (w) => w.id == selectedMainSpaceId,
+      orElse: () => _wallets.isNotEmpty ? _wallets.first : WalletModel.defaultWallets.first,
+    );
+  }
+
+  double get mainSpaceBalance => getWalletBalance(selectedMainSpace.id);
+
+  Future<void> setSelectedMainSpace(String spaceId) async {
+    if (_selectedMainSpaceId == spaceId) return;
+    _selectedMainSpaceId = spaceId;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keySelectedMainSpaceId, spaceId);
+    notifyListeners();
+  }
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -64,7 +86,53 @@ class FinanceService extends ChangeNotifier {
     // 4. Load Debts
     _debts = await StorageService.loadDebts();
 
+    // 5. Load Selected Main Space
+    _selectedMainSpaceId = prefs.getString(_keySelectedMainSpaceId);
+    if (_selectedMainSpaceId == null || !_wallets.any((w) => w.id == _selectedMainSpaceId)) {
+      _selectedMainSpaceId = _wallets.isNotEmpty ? _wallets.first.id : 'cash';
+      await prefs.setString(_keySelectedMainSpaceId, _selectedMainSpaceId!);
+    }
+
     _isInitialized = true;
+    notifyListeners();
+  }
+
+  Future<void> loadFromCloudData(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (data['wallets'] is List) {
+      final list = data['wallets'] as List;
+      final parsed = list.map((e) => WalletModel.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      if (parsed.isNotEmpty) {
+        _wallets = parsed;
+        await _saveWallets();
+      }
+    }
+
+    if (data['transactions'] is List) {
+      final list = data['transactions'] as List;
+      _transactions = list.map((e) => TransactionModel.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      _transactions.sort((a, b) => b.date.compareTo(a.date));
+      await _saveTransactions();
+    }
+
+    if (data['budgets'] is List) {
+      final list = data['budgets'] as List;
+      _budgets = list.map((e) => BudgetModel.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      await prefs.setString(_keyBudgets, json.encode(_budgets.map((b) => b.toMap()).toList()));
+    }
+
+    if (data['debts'] is List) {
+      final list = data['debts'] as List;
+      _debts = list.map((e) => Debt.fromMap(Map<String, dynamic>.from(e as Map))).toList();
+      await StorageService.saveDebts(_debts);
+    }
+
+    if (_selectedMainSpaceId == null || !_wallets.any((w) => w.id == _selectedMainSpaceId)) {
+      _selectedMainSpaceId = _wallets.isNotEmpty ? _wallets.first.id : 'cash';
+      await prefs.setString(_keySelectedMainSpaceId, _selectedMainSpaceId!);
+    }
+
     notifyListeners();
   }
 
@@ -74,6 +142,7 @@ class FinanceService extends ChangeNotifier {
     _transactions.sort((a, b) => b.date.compareTo(a.date));
     await _saveTransactions();
     notifyListeners();
+    SyncService.instance.scheduleCloudSync();
   }
 
   Future<void> editTransaction(TransactionModel tx) async {
@@ -83,6 +152,7 @@ class FinanceService extends ChangeNotifier {
       _transactions.sort((a, b) => b.date.compareTo(a.date));
       await _saveTransactions();
       notifyListeners();
+      SyncService.instance.scheduleCloudSync();
     }
   }
 
@@ -90,6 +160,7 @@ class FinanceService extends ChangeNotifier {
     _transactions.removeWhere((t) => t.id == id);
     await _saveTransactions();
     notifyListeners();
+    SyncService.instance.scheduleCloudSync();
   }
 
   Future<void> _saveTransactions() async {
@@ -103,6 +174,7 @@ class FinanceService extends ChangeNotifier {
     _wallets.add(wallet);
     await _saveWallets();
     notifyListeners();
+    SyncService.instance.scheduleCloudSync();
   }
 
   Future<void> editWallet(WalletModel wallet) async {
@@ -111,13 +183,69 @@ class FinanceService extends ChangeNotifier {
       _wallets[idx] = wallet;
       await _saveWallets();
       notifyListeners();
+      SyncService.instance.scheduleCloudSync();
     }
+  }
+
+  bool hasTransactionsForWallet(String id) {
+    return _transactions.any((t) => t.walletId == id || t.toWalletId == id);
+  }
+
+  int getTransactionCountForWallet(String id) {
+    return _transactions.where((t) => t.walletId == id || t.toWalletId == id).length;
+  }
+
+  List<TransactionModel> getTransactionsForWallet(String id) {
+    return _transactions.where((t) => t.walletId == id || t.toWalletId == id).toList();
   }
 
   Future<void> deleteWallet(String id) async {
     _wallets.removeWhere((w) => w.id == id);
+    if (_selectedMainSpaceId == id) {
+      _selectedMainSpaceId = _wallets.isNotEmpty ? _wallets.first.id : 'cash';
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_keySelectedMainSpaceId, _selectedMainSpaceId!);
+    }
     await _saveWallets();
     notifyListeners();
+    SyncService.instance.scheduleCloudSync();
+  }
+
+  /// Safe deletion method (Condition 1)
+  /// Blocks deletion if wallet is the only space or has a non-zero balance
+  Future<bool> deleteWalletSafe(String id) async {
+    if (_wallets.length <= 1) return false;
+    final bal = getWalletBalance(id);
+    if (bal.abs() > 0.001) {
+      return false;
+    }
+    await deleteWallet(id);
+    return true;
+  }
+
+  Future<void> transferRemainingBalance({
+    required String fromId,
+    required String toId,
+    String? note,
+  }) async {
+    final fromBal = getWalletBalance(fromId);
+    if (fromBal <= 0) return;
+
+    final fromWallet = _wallets.firstWhere((w) => w.id == fromId, orElse: () => _wallets.first);
+
+    final tx = TransactionModel(
+      id: TransactionModel.generateId(),
+      title: 'تحويل تصفية رصيد',
+      amount: fromBal,
+      currency: fromWallet.currency,
+      type: TransactionType.transfer,
+      categoryId: 'other_exp',
+      walletId: fromId,
+      toWalletId: toId,
+      date: DateTime.now(),
+      note: note ?? 'تصفية رصيد قبل حذف المساحة',
+    );
+    await addTransaction(tx);
   }
 
   Future<void> _saveWallets() async {
@@ -245,6 +373,7 @@ class FinanceService extends ChangeNotifier {
     _debts.insert(0, debt);
     await StorageService.saveDebts(_debts);
     notifyListeners();
+    SyncService.instance.scheduleCloudSync();
   }
 
   Future<void> editDebt(Debt debt) async {
@@ -253,6 +382,7 @@ class FinanceService extends ChangeNotifier {
       _debts[idx] = debt;
       await StorageService.saveDebts(_debts);
       notifyListeners();
+      SyncService.instance.scheduleCloudSync();
     }
   }
 
@@ -263,6 +393,7 @@ class FinanceService extends ChangeNotifier {
       _debts[idx] = current.copyWith(isPaid: !current.isPaid);
       await StorageService.saveDebts(_debts);
       notifyListeners();
+      SyncService.instance.scheduleCloudSync();
     }
   }
 
@@ -270,6 +401,7 @@ class FinanceService extends ChangeNotifier {
     _debts.removeWhere((d) => d.id == id);
     await StorageService.saveDebts(_debts);
     notifyListeners();
+    SyncService.instance.scheduleCloudSync();
   }
 
   Future<void> addVersement(String debtId, DebtVersement versement) async {
@@ -285,6 +417,7 @@ class FinanceService extends ChangeNotifier {
       );
       await StorageService.saveDebts(_debts);
       notifyListeners();
+      SyncService.instance.scheduleCloudSync();
     }
   }
 
@@ -300,6 +433,7 @@ class FinanceService extends ChangeNotifier {
       );
       await StorageService.saveDebts(_debts);
       notifyListeners();
+      SyncService.instance.scheduleCloudSync();
     }
   }
 

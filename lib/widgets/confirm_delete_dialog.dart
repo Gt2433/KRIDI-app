@@ -5,12 +5,16 @@ class ConfirmDeleteDialog extends StatelessWidget {
   final String personName;
   final String? title;
   final String? content;
+  final String? confirmText;
+  final bool isDestructive;
 
   const ConfirmDeleteDialog({
     super.key,
     this.personName = '',
     this.title,
     this.content,
+    this.confirmText,
+    this.isDestructive = true,
   });
 
   static Future<bool?> show(
@@ -18,6 +22,8 @@ class ConfirmDeleteDialog extends StatelessWidget {
     String personName = '',
     String? title,
     String? content,
+    String? confirmText,
+    bool isDestructive = true,
   }) {
     return showDialog<bool>(
       context: context,
@@ -26,6 +32,8 @@ class ConfirmDeleteDialog extends StatelessWidget {
         personName: personName,
         title: title,
         content: content,
+        confirmText: confirmText,
+        isDestructive: isDestructive,
       ),
     );
   }
@@ -74,7 +82,7 @@ class ConfirmDeleteDialog extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
           onPressed: () => Navigator.of(context).pop(true),
-          child: Text(AppStrings.tr(context, 'delete')),
+          child: Text(confirmText ?? AppStrings.tr(context, 'delete')),
         ),
       ],
     );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/security_service.dart';
 import '../services/settings_service.dart';
-import 'face_scanner_dialog.dart';
 
 class RevealBalanceAuthSheet extends StatefulWidget {
   const RevealBalanceAuthSheet({super.key});
@@ -81,13 +80,6 @@ class _RevealBalanceAuthSheetState extends State<RevealBalanceAuthSheet> {
     }
   }
 
-  void _onFaceUnlockTap() async {
-    final success = await FaceScannerDialog.show(context, mode: FaceScannerMode.unlock);
-    if (success == true && mounted) {
-      Navigator.pop(context, true);
-    }
-  }
-
   void _onFingerprintTap() async {
     final success = await SecurityService.authenticateWithBiometrics(
       reason: 'يرجى وضع بصمة الإصبع للكشف عن الرصيد',
@@ -134,7 +126,7 @@ class _RevealBalanceAuthSheetState extends State<RevealBalanceAuthSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Icon + Title (Face & Fingerprint)
+            // Icon + Title (Fingerprint)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -144,14 +136,7 @@ class _RevealBalanceAuthSheetState extends State<RevealBalanceAuthSheet> {
                     color: iconCircleBg,
                     shape: BoxShape.circle,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.face_unlock_rounded, color: textCol, size: 20),
-                      const SizedBox(width: 4),
-                      Icon(Icons.fingerprint_rounded, color: textCol, size: 20),
-                    ],
-                  ),
+                  child: Icon(Icons.fingerprint_rounded, color: textCol, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -166,20 +151,18 @@ class _RevealBalanceAuthSheetState extends State<RevealBalanceAuthSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              _hasConfiguredPin ? 'أدخل الرمز أو اختر وسيلة الدخول:' : 'أدخل 4 أرقام لتعيين رمز PIN',
+              _hasConfiguredPin ? 'أدخل الرمز أو استخدم بصمة الإصبع:' : 'أدخل 4 أرقام لتعيين رمز PIN',
               style: TextStyle(fontSize: 12, color: subTextCol),
               textAlign: TextAlign.center,
             ),
 
-            // Face & Fingerprint buttons (if enabled)
+            // Fingerprint button (if enabled)
             if (_hasConfiguredPin) ...[
               Builder(
                 builder: (context) {
-                  final hasFace = SettingsService.faceEnrolledNotifier.value &&
-                      SettingsService.faceAuthEnabledNotifier.value;
                   final hasFingerprint = SettingsService.fingerprintEnabledNotifier.value;
 
-                  if (!hasFace && !hasFingerprint) {
+                  if (!hasFingerprint) {
                     return const SizedBox(height: 12);
                   }
 
@@ -188,63 +171,33 @@ class _RevealBalanceAuthSheetState extends State<RevealBalanceAuthSheet> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (hasFace)
-                          InkWell(
-                            onTap: _onFaceUnlockTap,
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: keyBg,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: keyBorder),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.face_unlock_rounded, size: 18, color: textCol),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'بصمة الوجه',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: textCol,
-                                    ),
+                        InkWell(
+                          onTap: _onFingerprintTap,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: keyBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: keyBorder),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.fingerprint_rounded, size: 18, color: textCol),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'بصمة الإصبع',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: textCol,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        if (hasFace && hasFingerprint) const SizedBox(width: 10),
-                        if (hasFingerprint)
-                          InkWell(
-                            onTap: _onFingerprintTap,
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: keyBg,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: keyBorder),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.fingerprint_rounded, size: 18, color: textCol),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'بصمة الإصبع',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: textCol,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                        ),
                       ],
                     ),
                   );
@@ -305,29 +258,12 @@ class _RevealBalanceAuthSheetState extends State<RevealBalanceAuthSheet> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Face or Fingerprint shortcut button
+            // Fingerprint shortcut button
             Builder(
               builder: (context) {
-                final hasFace = SettingsService.faceEnrolledNotifier.value &&
-                    SettingsService.faceAuthEnabledNotifier.value;
                 final hasFingerprint = SettingsService.fingerprintEnabledNotifier.value;
 
-                if (hasFace) {
-                  return InkWell(
-                    onTap: _onFaceUnlockTap,
-                    borderRadius: BorderRadius.circular(32),
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: iconCircleBg,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.face_unlock_rounded, size: 26, color: textCol),
-                    ),
-                  );
-                } else if (hasFingerprint) {
+                if (hasFingerprint) {
                   return InkWell(
                     onTap: _onFingerprintTap,
                     borderRadius: BorderRadius.circular(32),

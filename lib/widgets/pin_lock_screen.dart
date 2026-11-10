@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/security_service.dart';
 import '../services/settings_service.dart';
-import 'face_scanner_dialog.dart';
 
 class PinLockScreen extends StatefulWidget {
   final VoidCallback onUnlocked;
@@ -20,14 +19,6 @@ class _PinLockScreenState extends State<PinLockScreen> {
   void initState() {
     super.initState();
     // Do not auto-launch biometrics; directly show the PIN keypad screen.
-  }
-
-  void _onFaceUnlockTap() async {
-    final success = await FaceScannerDialog.show(context, mode: FaceScannerMode.unlock);
-    if (success == true && mounted) {
-      SettingsService.isUnlockedThisSession = true;
-      widget.onUnlocked();
-    }
   }
 
   void _onFingerprintTap() async {
@@ -121,14 +112,12 @@ class _PinLockScreenState extends State<PinLockScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Face & Fingerprint buttons (only shown if configured)
+              // Fingerprint button (only shown if configured)
               Builder(
                 builder: (context) {
-                  final hasFace = SettingsService.faceEnrolledNotifier.value &&
-                      SettingsService.faceAuthEnabledNotifier.value;
                   final hasFingerprint = SettingsService.fingerprintEnabledNotifier.value;
 
-                  if (!hasFace && !hasFingerprint) {
+                  if (!hasFingerprint) {
                     return const SizedBox(height: 12);
                   }
 
@@ -137,63 +126,33 @@ class _PinLockScreenState extends State<PinLockScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (hasFace)
-                          InkWell(
-                            onTap: _onFaceUnlockTap,
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: keyBg,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: keyBorder),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.face_unlock_rounded, size: 20, color: textCol),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'بصمة الوجه',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: textCol,
-                                    ),
+                        InkWell(
+                          onTap: _onFingerprintTap,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: keyBg,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: keyBorder),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.fingerprint_rounded, size: 20, color: textCol),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'بصمة الإصبع',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: textCol,
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        if (hasFace && hasFingerprint) const SizedBox(width: 12),
-                        if (hasFingerprint)
-                          InkWell(
-                            onTap: _onFingerprintTap,
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: keyBg,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: keyBorder),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.fingerprint_rounded, size: 20, color: textCol),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'بصمة الإصبع',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      color: textCol,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                        ),
                       ],
                     ),
                   );
@@ -253,29 +212,12 @@ class _PinLockScreenState extends State<PinLockScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Face or Fingerprint shortcut icon (if enabled)
+            // Fingerprint shortcut icon (if enabled)
             Builder(
               builder: (context) {
-                final hasFace = SettingsService.faceEnrolledNotifier.value &&
-                    SettingsService.faceAuthEnabledNotifier.value;
                 final hasFingerprint = SettingsService.fingerprintEnabledNotifier.value;
 
-                if (hasFace) {
-                  return InkWell(
-                    onTap: _onFaceUnlockTap,
-                    borderRadius: BorderRadius.circular(36),
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: iconCircleBg,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.face_unlock_rounded, size: 28, color: textCol),
-                    ),
-                  );
-                } else if (hasFingerprint) {
+                if (hasFingerprint) {
                   return InkWell(
                     onTap: _onFingerprintTap,
                     borderRadius: BorderRadius.circular(36),

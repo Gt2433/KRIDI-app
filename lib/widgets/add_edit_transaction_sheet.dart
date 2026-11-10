@@ -1,12 +1,12 @@
-hvimport 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/category_model.dart';
 import '../models/transaction_model.dart';
 import '../models/wallet_model.dart';
 import '../services/category_service.dart';
 import '../services/finance_service.dart';
-import '../services/settings_service.dart';
 import '../utils/formatters.dart';
 import 'add_category_sheet.dart';
+import 'bouncing_button.dart';
 
 class AddEditTransactionSheet extends StatefulWidget {
   final TransactionModel? initialTransaction;
@@ -49,6 +49,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
   late String _selectedCategoryId;
   late String _selectedWalletId;
   String? _selectedToWalletId;
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -169,7 +170,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
     }
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final amount = double.tryParse(_amountController.text.trim().replaceAll(',', '.')) ?? 0.0;
@@ -177,11 +178,70 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
     final note = _noteController.text.trim().isEmpty ? null : _noteController.text.trim();
 
     final finance = FinanceService.instance;
+    final sourceWallet = finance.wallets.firstWhere(
+      (w) => w.id == _selectedWalletId,
+      orElse: () => finance.wallets.isNotEmpty ? finance.wallets.first : WalletModel.defaultWallets.first,
+    );
+
+    if (_type == TransactionType.transfer) {
+      if (_selectedToWalletId == null || _selectedToWalletId == _selectedWalletId) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('يرجى اختيار مساحتين ماليتين مختلفتين للتحويل'),
+            backgroundColor: Color(0xFFDC2626),
+          ),
+        );
+        return;
+      }
+
+      final destWallet = finance.wallets.firstWhere(
+        (w) => w.id == _selectedToWalletId,
+        orElse: () => finance.wallets.first,
+      );
+
+      // Currency match check (Condition 3)
+      if (sourceWallet.currency != destWallet.currency) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('لا يمكن التحويل المباشر بين عملتين مختلفتين (${sourceWallet.currency} و ${destWallet.currency})'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+        return;
+      }
+
+      // Balance check
+      double available = finance.getWalletBalance(sourceWallet.id);
+      if (widget.initialTransaction != null &&
+          widget.initialTransaction!.type == TransactionType.transfer &&
+          widget.initialTransaction!.walletId == sourceWallet.id) {
+        available += widget.initialTransaction!.amount;
+      }
+
+      if (amount > available) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('الرصيد غير كافٍ في "${sourceWallet.name}"! المتوفر: ${Formatters.formatAmount(available, currency: sourceWallet.currency)}'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+        return;
+      }
+    }
+
+    final destWallet = _selectedToWalletId != null
+        ? finance.wallets.firstWhere((w) => w.id == _selectedToWalletId, orElse: () => sourceWallet)
+        : null;
+
+    final defaultTitle = _type == TransactionType.transfer
+        ? 'أخذ من ${sourceWallet.name} إلى ${destWallet?.name ?? ''}'
+        : CategoryModel.getById(_selectedCategoryId).nameAr;
 
     if (widget.initialTransaction != null) {
       final updated = widget.initialTransaction!.copyWith(
-        title: title.isEmpty ? (_type == TransactionType.transfer ? 'تحويل مالي' : CategoryModel.getById(_selectedCategoryId).nameAr) : title,
+        title: title.isEmpty ? defaultTitle : title,
         amount: amount,
+        currency: sourceWallet.currency,
         type: _type,
         categoryId: _selectedCategoryId,
         walletId: _selectedWalletId,
@@ -193,8 +253,9 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
     } else {
       final newTx = TransactionModel(
         id: TransactionModel.generateId(),
-        title: title.isEmpty ? (_type == TransactionType.transfer ? 'تحويل مالي' : CategoryModel.getById(_selectedCategoryId).nameAr) : title,
+        title: title.isEmpty ? defaultTitle : title,
         amount: amount,
+        currency: sourceWallet.currency,
         type: _type,
         categoryId: _selectedCategoryId,
         walletId: _selectedWalletId,
@@ -205,7 +266,11 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
       finance.addTransaction(newTx);
     }
 
-    Navigator.of(context).pop();
+    setState(() => _isSaving = true);
+    await Future.delayed(const Duration(milliseconds: 380));
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -218,6 +283,17 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
     final toggleBg = isDark ? const Color(0xFF27272A) : const Color(0xFFF3F4F6);
     final finance = FinanceService.instance;
     final catType = _type == TransactionType.income ? CategoryType.income : CategoryType.expense;
+
+    final sourceWallet = finance.wallets.firstWhere(
+      (w) => w.id == _selectedWalletId,
+      orElse: () => finance.wallets.isNotEmpty ? finance.wallets.first : WalletModel.defaultWallets.first,
+    );
+    final destWallet = _selectedToWalletId != null
+        ? finance.wallets.firstWhere((w) => w.id == _selectedToWalletId, orElse: () => sourceWallet)
+        : null;
+    final isCurrencyMismatch = _type == TransactionType.transfer &&
+        destWallet != null &&
+        sourceWallet.currency != destWallet.currency;
 
     return Container(
       margin: EdgeInsets.only(
@@ -235,7 +311,20 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
         ),
       ),
       child: SafeArea(
-        child: SingleChildScrollView(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          builder: (context, val, child) {
+            return Opacity(
+              opacity: val,
+              child: Transform.translate(
+                offset: Offset(0, (1 - val) * 12),
+                child: child,
+              ),
+            );
+          },
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Form(
             key: _formKey,
@@ -257,7 +346,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
 
                 // Header
                 Text(
-                  widget.initialTransaction != null ? 'تعديل' : 'إضافة',
+                  widget.initialTransaction != null ? 'تعديل المعاملة' : 'معاملة جديدة',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textCol),
                   textAlign: TextAlign.center,
                 ),
@@ -274,7 +363,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
                     children: [
                       _buildTypeTab('مصروف', TransactionType.expense, const Color(0xFFEF4444), Icons.arrow_downward_rounded),
                       _buildTypeTab('دخل', TransactionType.income, const Color(0xFF16A34A), Icons.arrow_upward_rounded),
-                      _buildTypeTab('تحويل', TransactionType.transfer, const Color(0xFF2563EB), Icons.swap_horiz_rounded),
+                      _buildTypeTab('أخذ / تحويل', TransactionType.transfer, const Color(0xFF2563EB), Icons.swap_horiz_rounded),
                     ],
                   ),
                 ),
@@ -291,7 +380,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
                   child: Row(
                     children: [
                       Text(
-                        SettingsService.currencyNotifier.value,
+                        Formatters.getCurrencySymbol(sourceWallet.currency),
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -484,7 +573,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('من', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                            const Text('من (أين تأخذ؟)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 6),
                             _buildWalletDropdown(
                               value: _selectedWalletId,
@@ -492,19 +581,20 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
                                 if (val != null) setState(() => _selectedWalletId = val);
                               },
                               wallets: finance.wallets,
+                              isCompact: true,
                             ),
                           ],
                         ),
                       ),
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 20),
-                        child: Icon(Icons.arrow_forward_rounded, color: Colors.blue),
+                        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 16),
+                        child: Icon(Icons.arrow_forward_rounded, color: Colors.blue, size: 20),
                       ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('إلى', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                            const Text('إلى (أين تضع المال؟)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 6),
                             _buildWalletDropdown(
                               value: _selectedToWalletId ?? (finance.wallets.isNotEmpty ? finance.wallets.first.id : ''),
@@ -512,14 +602,43 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
                                 if (val != null) setState(() => _selectedToWalletId = val);
                               },
                               wallets: finance.wallets,
+                              isCompact: true,
                             ),
                           ],
                         ),
                       ),
                     ],
                   ),
+                  if (isCurrencyMismatch) ...[
+                    Container(
+                      margin: const EdgeInsets.only(top: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDC2626).withAlpha(20),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFDC2626).withAlpha(80)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Color(0xFFDC2626), size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'تنبيه: لا يمكن التحويل بين عملتين مختلفتين (${sourceWallet.currency} ≠ ${destWallet.currency}). يجب اختيار مساحتين بنفس العملة.',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFFDC2626), fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ] else ...[
-                  const Text('المحفظة', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  Text(
+                    _type == TransactionType.income
+                        ? 'إلى المساحة المالية (الوجهة):'
+                        : 'من المساحة المالية (المصدر):',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   _buildWalletDropdown(
                     value: _selectedWalletId,
@@ -620,18 +739,60 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
                 ),
                 const SizedBox(height: 24),
 
-                // Submit Button
-                ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  ),
-                  child: const Text(
-                    'حفظ',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                // Animated Submit Button with Success Feedback
+                BouncingButton(
+                  scaleFactor: 0.95,
+                  onTap: _isSaving ? null : _submit,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutCubic,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: _isSaving
+                          ? const Color(0xFF16A34A)
+                          : (isDark ? Colors.white : Colors.black),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (_isSaving ? const Color(0xFF16A34A) : (isDark ? Colors.white : Colors.black))
+                              .withAlpha(45),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                        child: _isSaving
+                            ? const Row(
+                                key: ValueKey('saved'),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'تم الحفظ بنجاح ✓',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(
+                                'حفظ',
+                                key: const ValueKey('save'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.black : Colors.white,
+                                ),
+                              ),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 10),
@@ -640,7 +801,8 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildTypeTab(String label, TransactionType type, Color color, IconData icon) {
@@ -679,6 +841,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
     required String value,
     required void Function(String?) onChanged,
     required List<WalletModel> wallets,
+    bool isCompact = false,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final fieldBg = isDark ? const Color(0xFF27272A) : const Color(0xFFF9FAFB);
@@ -686,7 +849,7 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
     final textCol = isDark ? Colors.white : Colors.black;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: 2),
       decoration: BoxDecoration(
         color: fieldBg,
         borderRadius: BorderRadius.circular(16),
@@ -696,20 +859,65 @@ class _AddEditTransactionSheetState extends State<AddEditTransactionSheet> {
         child: DropdownButton<String>(
           value: wallets.any((w) => w.id == value) ? value : (wallets.isNotEmpty ? wallets.first.id : null),
           isExpanded: true,
+          itemHeight: 56.0,
           dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          icon: Icon(Icons.arrow_drop_down_rounded, color: textCol),
+          icon: Icon(Icons.arrow_drop_down_rounded, color: textCol, size: isCompact ? 18 : 24),
           items: wallets.map((w) {
+            final bal = FinanceService.instance.getWalletBalance(w.id);
             return DropdownMenuItem<String>(
               value: w.id,
               child: Row(
                 children: [
-                  Icon(w.icon, size: 18, color: w.color),
-                  const SizedBox(width: 8),
+                  Icon(w.icon, size: isCompact ? 16 : 18, color: w.color),
+                  SizedBox(width: isCompact ? 6 : 8),
                   Expanded(
-                    child: Text(
-                      w.name,
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textCol),
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                w.name,
+                                style: TextStyle(
+                                  fontSize: isCompact ? 11 : 13,
+                                  fontWeight: FontWeight.bold,
+                                  color: textCol,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF3F3F46) : const Color(0xFFE5E7EB),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                w.currency,
+                                style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          Formatters.formatAmount(bal, currency: w.currency),
+                          style: TextStyle(
+                            fontSize: isCompact ? 10 : 11,
+                            fontWeight: FontWeight.w600,
+                            color: bal >= 0
+                                ? (isDark ? const Color(0xFFA1A1AA) : const Color(0xFF6B7280))
+                                : const Color(0xFFDC2626),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        ),
+                      ],
                     ),
                   ),
                 ],

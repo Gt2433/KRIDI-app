@@ -43,7 +43,7 @@ void main() {
   group('Formatters Tests', () {
     test('formatAmount adds DZD currency suffix', () {
       final formatted = Formatters.formatAmount(2000);
-      expect(formatted.contains('دج'), true);
+      expect(formatted.contains('د.ج') || formatted.contains('دج'), true);
     });
   });
 }

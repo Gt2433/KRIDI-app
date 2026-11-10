@@ -18,7 +18,7 @@ class SecurityService {
     }
   }
 
-  /// Check available biometric types (e.g. face, fingerprint)
+  /// Check available biometric types (e.g. fingerprint)
   static Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _auth.getAvailableBiometrics();
@@ -27,15 +27,9 @@ class SecurityService {
     }
   }
 
-  /// Whether device has Face recognition enrolled/supported
-  static Future<bool> hasFaceBiometrics() async {
-    final list = await getAvailableBiometrics();
-    return list.contains(BiometricType.face);
-  }
-
-  /// Request biometric authentication (Face ID / Fingerprint / Device Passcode)
+  /// Request biometric authentication (Fingerprint / Device Passcode)
   static Future<bool> authenticateWithBiometrics({
-    String reason = 'تأكيد الهوية ببصمة الوجه أو الإصبع للكشف عن الرصيد',
+    String reason = 'تأكيد الهوية ببصمة الإصبع للكشف عن الرصيد',
     bool biometricOnly = true,
   }) async {
     try {
@@ -45,7 +39,7 @@ class SecurityService {
       return await _auth.authenticate(
         localizedReason: reason,
         biometricOnly: biometricOnly,
-        sensitiveTransaction: false, // Instant Face Unlock recognition without extra tap
+        sensitiveTransaction: false,
         persistAcrossBackgrounding: true,
       );
     } on PlatformException catch (e) {

@@ -4,13 +4,31 @@ import '../services/settings_service.dart';
 class Formatters {
   /// Format double amount into selected currency format e.g. "2,500 د.ج"
   /// If hideBalance is active, returns "••••"
-  static String formatAmount(double amount, {bool forceShow = false}) {
+  static String formatAmount(double amount, {bool forceShow = false, String? currency}) {
+    final curr = currency != null ? getCurrencySymbol(currency) : SettingsService.currencyNotifier.value;
     if (!forceShow && SettingsService.hideBalanceNotifier.value) {
-      return '•••••• ${SettingsService.currencyNotifier.value}';
+      return '•••••• $curr';
     }
     final formatter = NumberFormat('#,##0.##', 'ar');
     final formatted = formatter.format(amount);
-    return '$formatted ${SettingsService.currencyNotifier.value}';
+    return '$formatted $curr';
+  }
+
+  /// Helper to get user-friendly symbol for currency code
+  static String getCurrencySymbol(String currencyCode) {
+    final upper = currencyCode.trim().toUpperCase();
+    switch (upper) {
+      case 'USD':
+      case '\$':
+        return '\$';
+      case 'EUR':
+      case '€':
+        return '€';
+      case 'DZD':
+      case 'د.ج':
+      default:
+        return 'د.ج';
+    }
   }
 
   /// Format date into readable Arabic format e.g. "5 أكتوبر 2026" or relative text

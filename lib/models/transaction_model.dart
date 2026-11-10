@@ -4,6 +4,7 @@ class TransactionModel {
   final String id;
   final String title;
   final double amount;
+  final String? currency;
   final TransactionType type;
   final String categoryId;
   final String walletId;
@@ -15,6 +16,7 @@ class TransactionModel {
     required this.id,
     required this.title,
     required this.amount,
+    this.currency,
     required this.type,
     required this.categoryId,
     required this.walletId,
@@ -32,6 +34,7 @@ class TransactionModel {
       'id': id,
       'title': title,
       'amount': amount,
+      'currency': currency,
       'type': type.name,
       'categoryId': categoryId,
       'walletId': walletId,
@@ -46,6 +49,7 @@ class TransactionModel {
       id: map['id'] as String,
       title: map['title'] as String? ?? '',
       amount: (map['amount'] as num?)?.toDouble() ?? 0.0,
+      currency: map['currency'] as String?,
       type: TransactionType.values.firstWhere(
         (t) => t.name == map['type'],
         orElse: () => TransactionType.expense,
@@ -62,6 +66,7 @@ class TransactionModel {
     String? id,
     String? title,
     double? amount,
+    String? currency,
     TransactionType? type,
     String? categoryId,
     String? walletId,
@@ -73,6 +78,7 @@ class TransactionModel {
       id: id ?? this.id,
       title: title ?? this.title,
       amount: amount ?? this.amount,
+      currency: currency ?? this.currency,
       type: type ?? this.type,
       categoryId: categoryId ?? this.categoryId,
       walletId: walletId ?? this.walletId,

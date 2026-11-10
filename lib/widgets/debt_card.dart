@@ -447,8 +447,10 @@ class DebtCard extends StatelessWidget {
   }
 
   Widget _buildStatusBadge() {
+    Widget badge;
     if (debt.isFullyPaid) {
-      return Container(
+      badge = Container(
+        key: const ValueKey('paid'),
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         decoration: BoxDecoration(
           color: const Color(0xFFF0FDF4),
@@ -466,7 +468,8 @@ class DebtCard extends StatelessWidget {
       );
     } else if (debt.isPartiallyPaid) {
       final percent = ((debt.totalPaid / debt.amount) * 100).toInt();
-      return Container(
+      badge = Container(
+        key: ValueKey('partial_$percent'),
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         decoration: BoxDecoration(
           color: const Color(0xFFEFF6FF),
@@ -483,7 +486,8 @@ class DebtCard extends StatelessWidget {
         ),
       );
     } else {
-      return Container(
+      badge = Container(
+        key: const ValueKey('unpaid'),
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
         decoration: BoxDecoration(
           color: const Color(0xFFFEF2F2),
@@ -500,5 +504,11 @@ class DebtCard extends StatelessWidget {
         ),
       );
     }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+      child: badge,
+    );
   }
 }

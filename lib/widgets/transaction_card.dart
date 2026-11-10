@@ -7,6 +7,7 @@ import '../utils/formatters.dart';
 import 'add_edit_transaction_sheet.dart';
 import 'confirm_delete_dialog.dart';
 import 'glass_container.dart';
+import 'bouncing_button.dart';
 
 class TransactionCard extends StatelessWidget {
   final TransactionModel transaction;
@@ -57,6 +58,8 @@ class TransactionCard extends StatelessWidget {
       walletDisplay = '${wallet.name} ← ${toW.name}';
     }
 
+    final txCurrency = transaction.currency ?? wallet.currency;
+
     return Dismissible(
       key: Key(transaction.id),
       direction: DismissDirection.endToStart,
@@ -79,17 +82,19 @@ class TransactionCard extends StatelessWidget {
       onDismissed: (_) {
         finance.deleteTransaction(transaction.id);
       },
-      child: GlassContainer(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        borderRadius: BorderRadius.circular(20),
+      child: BouncingButton(
+        scaleFactor: 0.98,
         onTap: () {
           AddEditTransactionSheet.show(
             context,
             initialTransaction: transaction,
           );
         },
-        child: Row(
+        child: GlassContainer(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          borderRadius: BorderRadius.circular(20),
+          child: Row(
           children: [
             // Category / Type Icon Box
             Container(
@@ -115,7 +120,7 @@ class TransactionCard extends StatelessWidget {
                   Text(
                     transaction.title.isNotEmpty
                         ? transaction.title
-                        : (transaction.type == TransactionType.transfer ? 'تحويل' : cat.nameAr),
+                        : (transaction.type == TransactionType.transfer ? 'أخذ / تحويل' : cat.nameAr),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
@@ -167,7 +172,7 @@ class TransactionCard extends StatelessWidget {
 
             // Amount
             Text(
-              '$prefix${Formatters.formatAmount(transaction.amount)}',
+              '$prefix${Formatters.formatAmount(transaction.amount, currency: txCurrency)}',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -177,8 +182,9 @@ class TransactionCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 final walletFallback = WalletModel.defaultWallets.first;
