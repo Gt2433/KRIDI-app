@@ -3,6 +3,7 @@ import '../../models/category_model.dart';
 import '../../models/transaction_model.dart';
 import '../../services/category_service.dart';
 import '../../services/finance_service.dart';
+import '../../services/transaction_pdf_service.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/custom_pie_chart.dart';
 import '../../widgets/glass_container.dart';
@@ -371,6 +372,22 @@ class _AnalyticsTabState extends State<AnalyticsTab> {
                       onPressed: isDaily ? _nextDay : _nextMonth,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                    ),
+
+                    // PDF Export Button
+                    Container(
+                      margin: const EdgeInsets.only(right: 2),
+                      child: IconButton(
+                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 20, color: Color(0xFFDC2626)),
+                        tooltip: isDaily ? 'استخراج كشف اليوم PDF' : 'استخراج كشف الشهر PDF',
+                        onPressed: () => TransactionPdfService.showExportPdfDialog(
+                          context,
+                          initialDate: _selectedDate,
+                          initialMonth: _currentMonth,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      ),
                     ),
                   ],
                 ),

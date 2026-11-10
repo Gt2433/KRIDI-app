@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/finance_service.dart';
 import '../services/security_service.dart';
 import '../services/settings_service.dart';
+import '../services/transaction_pdf_service.dart';
 import '../services/update_service.dart';
 import '../utils/app_strings.dart';
 import '../widgets/ambient_background.dart';
@@ -986,6 +987,15 @@ class SettingsScreen extends StatelessWidget {
                         title: 'تصدير البيانات',
                         subtitle: 'Excel / CSV',
                         onTap: () => _exportReport(context),
+                      ),
+
+                      // Export to PDF
+                      _buildSettingTile(
+                        context,
+                        icon: Icons.picture_as_pdf_outlined,
+                        title: 'كشف المعاملات (PDF)',
+                        subtitle: 'استخراج تقرير يومي أو شهري',
+                        onTap: () => TransactionPdfService.showExportPdfDialog(context),
                       ),
                     ],
                   ),

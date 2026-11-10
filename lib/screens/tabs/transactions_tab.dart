@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/transaction_model.dart';
 import '../../services/finance_service.dart';
+import '../../services/transaction_pdf_service.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/glass_container.dart';
@@ -212,6 +213,21 @@ class _TransactionsTabState extends State<TransactionsTab> {
                           onPressed: _nextDay,
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        ),
+
+                        // PDF Export Button
+                        Container(
+                          margin: const EdgeInsets.only(right: 2),
+                          child: IconButton(
+                            icon: const Icon(Icons.picture_as_pdf_rounded, size: 20, color: Color(0xFFDC2626)),
+                            tooltip: 'تصدير كشف PDF',
+                            onPressed: () => TransactionPdfService.showExportPdfDialog(
+                              context,
+                              initialDate: _selectedDate,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                          ),
                         ),
                       ],
                     ),
