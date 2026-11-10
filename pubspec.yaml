@@ -90,6 +90,8 @@ flutter:
     - cover.png
     - avatars/
     - assets/mbd_character.png
+    - assets/mbd_peek.png
+    - assets/mbd_hand.png
     - assets/fonts/NotoNaskhArabic-Regular.ttf
     - assets/fonts/NotoNaskhArabic-Bold.ttf
 
