@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/settings_service.dart';
 import '../services/update_service.dart';
-import '../widgets/action_choice_sheet.dart';
+import '../widgets/add_operation_sheet.dart';
 import '../widgets/bouncing_button.dart';
 import '../widgets/pin_lock_screen.dart';
 import '../widgets/profile_bottom_sheet.dart';
@@ -277,7 +277,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
   Widget _buildCenterFab(BuildContext context, bool isDark) {
     return BouncingButton(
       scaleFactor: 0.86,
-      onTap: () => ActionChoiceSheet.show(context),
+      onTap: () => AddOperationSheet.show(context),
       child: Container(
         width: 48,
         height: 48,
