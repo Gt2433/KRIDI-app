@@ -436,253 +436,39 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                   top: false,
                   child: Column(
                     children: [
-                      // Fixed Top Section: Grabber, Navigation Bar & Hero Card
+                      // Top Grabber & Close Button Row
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 12, 18, 6),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
+                        padding: const EdgeInsets.fromLTRB(18, 12, 18, 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            const SizedBox(width: 38), // Balance for centering grabber
                             // Grabber
-                            Center(
-                              child: Container(
-                                width: 42,
-                                height: 4.5,
-                                decoration: BoxDecoration(
-                                  color: isDark ? Colors.white24 : Colors.black12,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
+                            Container(
+                              width: 44,
+                              height: 4.5,
+                              decoration: BoxDecoration(
+                                color: isDark ? Colors.white24 : Colors.black12,
+                                borderRadius: BorderRadius.circular(10),
                               ),
                             ),
-                            const SizedBox(height: 12),
-
-                            // Top Header with Close Button
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                // Close Button
-                                Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () => Navigator.pop(context),
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(7),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF1E2428) : const Color(0xFFF1F5F9),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(color: borderCol, width: 1),
-                                      ),
-                                      child: Icon(Icons.close_rounded, size: 18, color: textCol),
-                                    ),
-                                  ),
-                                ),
-
-                                // Pill Tabs Row (Interactive circular operation selector)
-                                Expanded(
-                                  child: Container(
-                                    margin: const EdgeInsets.symmetric(horizontal: 10),
-                                    padding: const EdgeInsets.all(3.5),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? const Color(0xFF191F23) : const Color(0xFFF1F5F9),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: borderCol, width: 1),
-                                    ),
-                                    child: Row(
-                                      children: List.generate(_operations.length, (idx) {
-                                        final op = _operations[idx];
-                                        final isSelected = _currentIndex == idx;
-                                        return Expanded(
-                                          child: GestureDetector(
-                                            onTap: () => _switchToIndex(idx),
-                                            child: AnimatedContainer(
-                                              duration: const Duration(milliseconds: 240),
-                                              curve: Curves.easeOutCubic,
-                                              padding: const EdgeInsets.symmetric(vertical: 7),
-                                              decoration: BoxDecoration(
-                                                color: isSelected ? op.color : Colors.transparent,
-                                                borderRadius: BorderRadius.circular(16),
-                                                boxShadow: isSelected
-                                                    ? [
-                                                        BoxShadow(
-                                                          color: op.color.withAlpha(90),
-                                                          blurRadius: 8,
-                                                          offset: const Offset(0, 2),
-                                                        ),
-                                                      ]
-                                                    : [],
-                                              ),
-                                              alignment: Alignment.center,
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(
-                                                    op.icon,
-                                                    size: 14,
-                                                    color: isSelected ? Colors.white : subTextCol,
-                                                  ),
-                                                  if (isSelected) ...[
-                                                    const SizedBox(width: 4),
-                                                    Flexible(
-                                                      child: Text(
-                                                        op.shortTitle,
-                                                        style: const TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Colors.white,
-                                                        ),
-                                                        overflow: TextOverflow.ellipsis,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }),
-                                    ),
-                                  ),
-                                ),
-
-                                // Step indicator badge
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            // Close Button
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () => Navigator.pop(context),
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6.5),
                                   decoration: BoxDecoration(
-                                    color: activeColor.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: activeColor.withAlpha(80), width: 1),
-                                  ),
-                                  child: Text(
-                                    '${_currentIndex + 1} / 4',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: activeColor,
+                                    color: isDark ? const Color(0xFF1B1F23) : const Color(0xFFF1F5F9),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isDark ? Colors.white.withAlpha(16) : Colors.black12,
+                                      width: 1,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-
-                            // Swipeable Hero Card Banner
-                            GestureDetector(
-                              onHorizontalDragEnd: _handleHorizontalDrag,
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 260),
-                                curve: Curves.easeOutCubic,
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      activeColor.withAlpha(isDark ? 35 : 20),
-                                      activeColor.withAlpha(isDark ? 15 : 10),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: activeColor.withAlpha(isDark ? 70 : 90),
-                                    width: 1.3,
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    // Previous Arrow Button
-                                    BouncingButton(
-                                      scaleFactor: 0.88,
-                                      onTap: _prevOperation,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF1E2428) : Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: borderCol, width: 1),
-                                        ),
-                                        child: Icon(Icons.chevron_right_rounded, size: 20, color: textCol),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-
-                                    // Icon with animated glow
-                                    AnimatedContainer(
-                                      duration: const Duration(milliseconds: 260),
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: activeColor,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: activeColor.withAlpha(110),
-                                            blurRadius: 12,
-                                            offset: const Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: AnimatedSwitcher(
-                                        duration: const Duration(milliseconds: 220),
-                                        transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                                        child: Icon(
-                                          currentMeta.icon,
-                                          key: ValueKey<IconData>(currentMeta.icon),
-                                          color: Colors.white,
-                                          size: 22,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-
-                                    // Titles
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          AnimatedSwitcher(
-                                            duration: const Duration(milliseconds: 220),
-                                            transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
-                                            child: Text(
-                                              currentMeta.title,
-                                              key: ValueKey<String>(currentMeta.title),
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: textCol,
-                                                letterSpacing: -0.2,
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            currentMeta.subtitle,
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              color: subTextCol,
-                                              height: 1.25,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                    // Next Arrow Button
-                                    BouncingButton(
-                                      scaleFactor: 0.88,
-                                      onTap: _nextOperation,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: isDark ? const Color(0xFF1E2428) : Colors.white,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(color: borderCol, width: 1),
-                                        ),
-                                        child: Icon(Icons.chevron_left_rounded, size: 20, color: textCol),
-                                      ),
-                                    ),
-                                  ],
+                                  child: Icon(Icons.close_rounded, size: 18, color: textCol),
                                 ),
                               ),
                             ),
@@ -690,7 +476,149 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                         ),
                       ),
 
-                      const Divider(height: 1),
+                      // Navigation Bar: Left arrow (pointing left), Center title (larger), Right arrow (pointing right)
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 6, 18, 12),
+                          child: Row(
+                            children: [
+                              // Physical Left Arrow (pointing outwards to the left)
+                              BouncingButton(
+                                scaleFactor: 0.88,
+                                onTap: _prevOperation,
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1B1F23) : const Color(0xFFF1F5F9),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isDark ? Colors.white.withAlpha(16) : Colors.black12,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_left_rounded,
+                                    size: 26,
+                                    color: textCol,
+                                  ),
+                                ),
+                              ),
+
+                              // Center Title Area: Large title + glowing icon + dots indicator
+                              Expanded(
+                                child: GestureDetector(
+                                  onHorizontalDragEnd: _handleHorizontalDrag,
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Directionality(
+                                    textDirection: TextDirection.rtl,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Animated Icon + Title
+                                        AnimatedSwitcher(
+                                          duration: const Duration(milliseconds: 240),
+                                          switchInCurve: Curves.easeOutCubic,
+                                          switchOutCurve: Curves.easeInCubic,
+                                          transitionBuilder: (child, anim) => FadeTransition(
+                                            opacity: anim,
+                                            child: ScaleTransition(
+                                              scale: Tween<double>(begin: 0.94, end: 1.0).animate(anim),
+                                              child: child,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            key: ValueKey<int>(_currentIndex),
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(7),
+                                                decoration: BoxDecoration(
+                                                  color: activeColor.withAlpha(isDark ? 36 : 25),
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                    color: activeColor.withAlpha(isDark ? 85 : 110),
+                                                    width: 1.2,
+                                                  ),
+                                                ),
+                                                child: Icon(
+                                                  currentMeta.icon,
+                                                  color: activeColor,
+                                                  size: 19,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                currentMeta.title,
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: textCol,
+                                                  letterSpacing: -0.3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 7),
+
+                                        // Minimalist 4-dots indicator (Tap to jump or visual position)
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: List.generate(_operations.length, (idx) {
+                                            final isCurrent = idx == _currentIndex;
+                                            return GestureDetector(
+                                              onTap: () => _switchToIndex(idx),
+                                              child: AnimatedContainer(
+                                                duration: const Duration(milliseconds: 240),
+                                                curve: Curves.easeOutCubic,
+                                                margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+                                                height: 4,
+                                                width: isCurrent ? 20 : 5,
+                                                decoration: BoxDecoration(
+                                                  color: isCurrent
+                                                      ? activeColor
+                                                      : (isDark ? Colors.white24 : Colors.black12),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                ),
+                                              ),
+                                            );
+                                          }),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Physical Right Arrow (pointing outwards to the right)
+                              BouncingButton(
+                                scaleFactor: 0.88,
+                                onTap: _nextOperation,
+                                child: Container(
+                                  width: 42,
+                                  height: 42,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF1B1F23) : const Color(0xFFF1F5F9),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isDark ? Colors.white.withAlpha(16) : Colors.black12,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.chevron_right_rounded,
+                                    size: 26,
+                                    color: textCol,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
 
                       // Form Body (With Gesture Detector for Swiping & Smooth AnimatedSwitcher)
                       Expanded(
@@ -900,8 +828,14 @@ class _AddOperationSheetState extends State<AddOperationSheet>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Amount Field
-        _buildAmountInput(color: color, isDark: isDark, textCol: textCol, currency: sourceWallet.currency),
-        const SizedBox(height: 18),
+        _buildAmountInput(
+          color: color,
+          isDark: isDark,
+          textCol: textCol,
+          subTextCol: subTextCol,
+          currency: sourceWallet.currency,
+        ),
+        const SizedBox(height: 16),
 
         // Wallet Selection (From / To)
         if (wallets.length < 2)
@@ -919,8 +853,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
           )
         else ...[
           // Source Wallet
-          _buildSectionHeader('من المساحة المالية (المصدر):', textCol),
-          const SizedBox(height: 8),
+          _buildSectionHeader('من المساحة المالية (المصدر):', subTextCol),
           _buildWalletSelector(
             wallets: wallets,
             selectedId: _selectedWalletId,
@@ -928,16 +861,15 @@ class _AddOperationSheetState extends State<AddOperationSheet>
             isDark: isDark,
             onSelected: (id) => setState(() => _selectedWalletId = id),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
           Text(
             'الرصيد المتاح: ${Formatters.formatAmount(sourceBalance, currency: sourceWallet.currency)}',
             style: TextStyle(fontSize: 11.5, color: subTextCol),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // Destination Wallet
-          _buildSectionHeader('إلى المساحة المالية (الوجهة):', textCol),
-          const SizedBox(height: 8),
+          _buildSectionHeader('إلى المساحة المالية (الوجهة):', subTextCol),
           _buildWalletSelector(
             wallets: wallets,
             selectedId: _selectedToWalletId,
@@ -964,7 +896,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
           ),
         ],
 
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         // Date & Time
         _buildDateTimeRow(isDark: isDark, textCol: textCol, activeColor: color),
         const SizedBox(height: 14),
@@ -1000,12 +932,17 @@ class _AddOperationSheetState extends State<AddOperationSheet>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Amount Field
-        _buildAmountInput(color: color, isDark: isDark, textCol: textCol, currency: sourceWallet.currency),
+        _buildAmountInput(
+          color: color,
+          isDark: isDark,
+          textCol: textCol,
+          subTextCol: subTextCol,
+          currency: sourceWallet.currency,
+        ),
         const SizedBox(height: 16),
 
         // Space / Wallet Selection
-        _buildSectionHeader('المساحة المالية المخصوم منها:', textCol),
-        const SizedBox(height: 8),
+        _buildSectionHeader('المساحة المالية المخصوم منها:', subTextCol),
         _buildWalletSelector(
           wallets: wallets,
           selectedId: _selectedWalletId,
@@ -1016,8 +953,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
         const SizedBox(height: 16),
 
         // Category Selector
-        _buildSectionHeader('التصنيف:', textCol),
-        const SizedBox(height: 8),
+        _buildSectionHeader('التصنيف:', subTextCol),
         _buildCategorySelector(
           categories: categories,
           selectedId: _selectedCategoryId,
@@ -1074,12 +1010,17 @@ class _AddOperationSheetState extends State<AddOperationSheet>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Amount Field
-        _buildAmountInput(color: color, isDark: isDark, textCol: textCol, currency: sourceWallet.currency),
+        _buildAmountInput(
+          color: color,
+          isDark: isDark,
+          textCol: textCol,
+          subTextCol: subTextCol,
+          currency: sourceWallet.currency,
+        ),
         const SizedBox(height: 16),
 
         // Space / Wallet Selection
-        _buildSectionHeader('المساحة المالية المودع فيها:', textCol),
-        const SizedBox(height: 8),
+        _buildSectionHeader('المساحة المالية المودع فيها:', subTextCol),
         _buildWalletSelector(
           wallets: wallets,
           selectedId: _selectedWalletId,
@@ -1090,8 +1031,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
         const SizedBox(height: 16),
 
         // Category Selector
-        _buildSectionHeader('التصنيف:', textCol),
-        const SizedBox(height: 8),
+        _buildSectionHeader('التصنيف:', subTextCol),
         _buildCategorySelector(
           categories: categories,
           selectedId: _selectedCategoryId,
@@ -1144,9 +1084,12 @@ class _AddOperationSheetState extends State<AddOperationSheet>
         Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E2428) : const Color(0xFFF1F5F9),
+            color: isDark ? const Color(0xFF161A1D) : const Color(0xFFF1F5F9),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: borderCol, width: 1),
+            border: Border.all(
+              color: isDark ? Colors.white.withAlpha(12) : Colors.black12,
+              width: 1,
+            ),
           ),
           child: Row(
             children: [
@@ -1222,21 +1165,32 @@ class _AddOperationSheetState extends State<AddOperationSheet>
         // Person Name Field
         TextFormField(
           controller: _debtPersonController,
-          style: TextStyle(color: textCol, fontSize: 14),
+          style: TextStyle(color: textCol, fontSize: 13.5),
           decoration: InputDecoration(
             labelText: 'اسم الشخص *',
-            prefixIcon: const Icon(Icons.person_outline_rounded, size: 20),
+            labelStyle: TextStyle(
+              fontSize: 12.5,
+              color: isDark ? const Color(0xFF8E9BA8) : const Color(0xFF64748B),
+            ),
+            prefixIcon: Icon(
+              Icons.person_outline_rounded,
+              size: 18,
+              color: isDark ? const Color(0xFF8E9BA8) : const Color(0xFF64748B),
+            ),
             filled: true,
-            fillColor: isDark ? const Color(0xFF1A1F23) : const Color(0xFFF8FAFC),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+            fillColor: isDark ? const Color(0xFF161A1D) : const Color(0xFFF8FAFC),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderCol),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(
+                color: isDark ? Colors.white.withAlpha(14) : Colors.black12,
+                width: 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: color, width: 1.5),
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide(color: color.withAlpha(180), width: 1.4),
             ),
           ),
           validator: (val) {
@@ -1249,7 +1203,13 @@ class _AddOperationSheetState extends State<AddOperationSheet>
         const SizedBox(height: 14),
 
         // Amount Field
-        _buildAmountInput(color: color, isDark: isDark, textCol: textCol, currency: currency),
+        _buildAmountInput(
+          color: color,
+          isDark: isDark,
+          textCol: textCol,
+          subTextCol: subTextCol,
+          currency: currency,
+        ),
         const SizedBox(height: 14),
 
         // Phone Number (Optional)
@@ -1288,59 +1248,105 @@ class _AddOperationSheetState extends State<AddOperationSheet>
     required Color color,
     required bool isDark,
     required Color textCol,
+    required Color subTextCol,
     required String currency,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF191F23) : const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withAlpha(isDark ? 80 : 100), width: 1.5),
+        color: isDark ? const Color(0xFF15191C) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: color.withAlpha(isDark ? 55 : 85),
+          width: 1.2,
+        ),
+        gradient: LinearGradient(
+          colors: [
+            color.withAlpha(isDark ? 16 : 10),
+            isDark ? const Color(0xFF15191C) : const Color(0xFFF8FAFC),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: TextFormField(
-              controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: textCol,
-                letterSpacing: -0.5,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'المبلغ',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: subTextCol,
+                ),
               ),
-              decoration: const InputDecoration(
-                hintText: '0.00',
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                decoration: BoxDecoration(
+                  color: color.withAlpha(isDark ? 28 : 22),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: color.withAlpha(isDark ? 65 : 80),
+                    width: 0.9,
+                  ),
+                ),
+                child: Text(
+                  currency,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: color,
+                    letterSpacing: 0.3,
+                  ),
+                ),
               ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
-                  return 'يرجى إدخال المبلغ';
-                }
-                final num = double.tryParse(val.trim().replaceAll(',', '.'));
-                if (num == null || num <= 0) {
-                  return 'يرجى إدخال مبلغ صحيح أكبر من صفر';
-                }
-                return null;
-              },
-            ),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: color.withAlpha(25),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: color.withAlpha(70), width: 1),
-            ),
-            child: Text(
-              currency,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+          const SizedBox(height: 8),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      fontSize: 34,
+                      fontWeight: FontWeight.w800,
+                      color: textCol,
+                      letterSpacing: -0.8,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: '0.00',
+                      hintStyle: TextStyle(
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? Colors.white24 : Colors.black26,
+                        letterSpacing: -0.8,
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) {
+                        return 'يرجى إدخال المبلغ';
+                      }
+                      final num = double.tryParse(val.trim().replaceAll(',', '.'));
+                      if (num == null || num <= 0) {
+                        return 'يرجى إدخال مبلغ صحيح أكبر من صفر';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -1348,13 +1354,16 @@ class _AddOperationSheetState extends State<AddOperationSheet>
     );
   }
 
-  Widget _buildSectionHeader(String title, Color textCol) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.bold,
-        color: textCol,
+  Widget _buildSectionHeader(String title, Color subTextCol) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, right: 2),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: subTextCol,
+        ),
       ),
     );
   }
@@ -1368,7 +1377,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
     required ValueChanged<String> onSelected,
   }) {
     return SizedBox(
-      height: 48,
+      height: 46,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: wallets.length,
@@ -1388,12 +1397,23 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                     ? activeColor
                     : (isDisabled
                         ? (isDark ? Colors.white10 : Colors.black12)
-                        : (isDark ? const Color(0xFF1E2428) : const Color(0xFFF1F5F9))),
+                        : (isDark ? const Color(0xFF161A1D) : const Color(0xFFF1F5F9))),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: isSelected ? activeColor : (isDark ? Colors.white12 : Colors.black12),
+                  color: isSelected
+                      ? activeColor
+                      : (isDark ? Colors.white.withAlpha(14) : Colors.black12),
                   width: 1,
                 ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withAlpha(70),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1408,7 +1428,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                     w.name,
                     style: TextStyle(
                       fontSize: 12.5,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                       color: isSelected ? Colors.white : (isDisabled ? Colors.grey : null),
                     ),
                   ),
@@ -1430,11 +1450,11 @@ class _AddOperationSheetState extends State<AddOperationSheet>
     required CategoryType type,
   }) {
     return SizedBox(
-      height: 78,
+      height: 74,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length + 1,
-        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, idx) {
           if (idx == categories.length) {
             // Add Custom Category Button
@@ -1446,18 +1466,21 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                 }
               },
               child: Container(
-                width: 64,
-                padding: const EdgeInsets.all(8),
+                width: 62,
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E2428) : const Color(0xFFF1F5F9),
+                  color: isDark ? const Color(0xFF161A1D) : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: activeColor.withAlpha(60), style: BorderStyle.solid),
+                  border: Border.all(
+                    color: isDark ? Colors.white.withAlpha(14) : Colors.black12,
+                    width: 1,
+                  ),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_rounded, color: activeColor, size: 24),
-                    const SizedBox(height: 4),
+                    Icon(Icons.add_rounded, color: activeColor, size: 22),
+                    const SizedBox(height: 3),
                     Text(
                       'إضافة',
                       style: TextStyle(fontSize: 10, color: activeColor, fontWeight: FontWeight.bold),
@@ -1475,14 +1498,18 @@ class _AddOperationSheetState extends State<AddOperationSheet>
             onTap: () => setState(() => _selectedCategoryId = cat.id),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 68,
-              padding: const EdgeInsets.all(6),
+              width: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               decoration: BoxDecoration(
-                color: isSelected ? activeColor.withAlpha(isDark ? 50 : 30) : (isDark ? const Color(0xFF1E2428) : const Color(0xFFF8FAFC)),
+                color: isSelected
+                    ? activeColor.withAlpha(isDark ? 40 : 25)
+                    : (isDark ? const Color(0xFF161A1D) : const Color(0xFFF8FAFC)),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? activeColor : (isDark ? Colors.white12 : Colors.black12),
-                  width: isSelected ? 2 : 1,
+                  color: isSelected
+                      ? activeColor.withAlpha(isDark ? 140 : 180)
+                      : (isDark ? Colors.white.withAlpha(12) : Colors.black12),
+                  width: isSelected ? 1.5 : 1,
                 ),
               ),
               child: Column(
@@ -1494,7 +1521,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                       color: cat.color.withAlpha(isSelected ? 255 : 40),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(cat.icon, size: 16, color: isSelected ? Colors.white : cat.color),
+                    child: Icon(cat.icon, size: 15, color: isSelected ? Colors.white : cat.color),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -1531,9 +1558,12 @@ class _AddOperationSheetState extends State<AddOperationSheet>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E2428) : const Color(0xFFF8FAFC),
+                color: isDark ? const Color(0xFF161A1D) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                border: Border.all(
+                  color: isDark ? Colors.white.withAlpha(14) : Colors.black12,
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
@@ -1542,7 +1572,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                   Expanded(
                     child: Text(
                       Formatters.formatDayHeader(_selectedDate),
-                      style: TextStyle(fontSize: 12.5, color: textCol),
+                      style: TextStyle(fontSize: 12.5, color: textCol, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -1560,9 +1590,12 @@ class _AddOperationSheetState extends State<AddOperationSheet>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E2428) : const Color(0xFFF8FAFC),
+                color: isDark ? const Color(0xFF161A1D) : const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: isDark ? Colors.white12 : Colors.black12),
+                border: Border.all(
+                  color: isDark ? Colors.white.withAlpha(14) : Colors.black12,
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
@@ -1571,7 +1604,7 @@ class _AddOperationSheetState extends State<AddOperationSheet>
                   Expanded(
                     child: Text(
                       Formatters.formatTime(_selectedDate),
-                      style: TextStyle(fontSize: 12.5, color: textCol),
+                      style: TextStyle(fontSize: 12.5, color: textCol, fontWeight: FontWeight.w500),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -1593,25 +1626,36 @@ class _AddOperationSheetState extends State<AddOperationSheet>
     required Color borderCol,
     TextInputType? keyboardType,
   }) {
+    final activeColor = _operations[_currentIndex].color;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       style: TextStyle(color: textCol, fontSize: 13.5),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(fontSize: 12.5),
-        prefixIcon: Icon(icon, size: 18),
+        labelStyle: TextStyle(
+          fontSize: 12.5,
+          color: isDark ? const Color(0xFF8E9BA8) : const Color(0xFF64748B),
+        ),
+        prefixIcon: Icon(
+          icon,
+          size: 18,
+          color: isDark ? const Color(0xFF8E9BA8) : const Color(0xFF64748B),
+        ),
         filled: true,
-        fillColor: isDark ? const Color(0xFF1A1F23) : const Color(0xFFF8FAFC),
+        fillColor: isDark ? const Color(0xFF161A1D) : const Color(0xFFF8FAFC),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: borderCol),
+          borderSide: BorderSide(
+            color: isDark ? Colors.white.withAlpha(14) : Colors.black12,
+            width: 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: _operations[_currentIndex].color, width: 1.5),
+          borderSide: BorderSide(color: activeColor.withAlpha(180), width: 1.4),
         ),
       ),
     );
