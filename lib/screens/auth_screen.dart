@@ -26,7 +26,7 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   bool _isRegister = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -37,8 +37,53 @@ class _AuthScreenState extends State<AuthScreen> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
 
+  late final AnimationController _entranceController;
+  late final AnimationController _hoverController;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
+  late final Animation<double> _hoverAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOut,
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.14),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    _hoverController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2200),
+    );
+    _hoverAnim = Tween<double>(begin: -4.0, end: 4.0).animate(
+      CurvedAnimation(
+        parent: _hoverController,
+        curve: Curves.easeInOutSine,
+      ),
+    );
+
+    _entranceController.forward().then((_) {
+      if (mounted) {
+        _hoverController.repeat(reverse: true);
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _entranceController.dispose();
+    _hoverController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _nameController.dispose();
@@ -204,23 +249,52 @@ class _AuthScreenState extends State<AuthScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Cloud Logo Icon
+                    // Welcoming MBD Character with Entrance & Hover Animation
                     Center(
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF27272A) : const Color(0xFFEFF6FF),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.cloud_sync_rounded,
-                          size: 42,
-                          color: Color(0xFF2563EB),
+                      child: SlideTransition(
+                        position: _slideAnim,
+                        child: FadeTransition(
+                          opacity: _fadeAnim,
+                          child: AnimatedBuilder(
+                            animation: _hoverAnim,
+                            builder: (context, child) {
+                              return Transform.translate(
+                                offset: Offset(0, _hoverAnim.value),
+                                child: child,
+                              );
+                            },
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Subtle ambient neon glow behind the character matching its green accents
+                                Container(
+                                  width: 140,
+                                  height: 140,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF22C55E).withAlpha(isDark ? 45 : 30),
+                                        blurRadius: 50,
+                                        spreadRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // MBD Character Image
+                                Image.asset(
+                                  'assets/mbd_character.png',
+                                  height: 160,
+                                  fit: BoxFit.contain,
+                                  filterQuality: FilterQuality.high,
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     // Title
                     Text(
@@ -239,7 +313,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       style: TextStyle(fontSize: 13, color: subTextCol, height: 1.4),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // Toggle Segment: Login / Register
                     Container(

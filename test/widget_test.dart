@@ -13,7 +13,7 @@ void main() {
     await FinanceService.instance.init();
 
     await tester.pumpWidget(const KrediApp());
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('كريدي'), findsWidgets);
   });
