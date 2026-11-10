@@ -8,11 +8,7 @@ class AuthScreen extends StatefulWidget {
   final bool isModal;
   final VoidCallback? onContinueAsGuest;
 
-  const AuthScreen({
-    super.key,
-    this.isModal = false,
-    this.onContinueAsGuest,
-  });
+  const AuthScreen({super.key, this.isModal = false, this.onContinueAsGuest});
 
   static Future<bool?> show(BuildContext context) {
     return Navigator.push<bool>(
@@ -54,30 +50,27 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       parent: _entranceController,
       curve: const Interval(0.0, 0.75, curve: Curves.easeOut),
     );
-    _characterSlideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.30),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.05, 1.0, curve: Curves.easeOutBack),
-    ));
-    _cardSlideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.15, 1.0, curve: Curves.easeOutCubic),
-    ));
+    _characterSlideAnim =
+        Tween<Offset>(begin: const Offset(0, 0.30), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.05, 1.0, curve: Curves.easeOutBack),
+          ),
+        );
+    _cardSlideAnim =
+        Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.15, 1.0, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _hoverController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2400),
     );
     _hoverAnim = Tween<double>(begin: -3.0, end: 3.0).animate(
-      CurvedAnimation(
-        parent: _hoverController,
-        curve: Curves.easeInOutSine,
-      ),
+      CurvedAnimation(parent: _hoverController, curve: Curves.easeInOutSine),
     );
 
     _entranceController.forward().then((_) {
@@ -163,7 +156,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: const Text('استعادة كلمة المرور', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'استعادة كلمة المرور',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -198,7 +194,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني ✓'),
+                      content: Text(
+                        'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني ✓',
+                      ),
                       backgroundColor: Color(0xFF16A34A),
                     ),
                   );
@@ -229,7 +227,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textCol = isDark ? Colors.white : const Color(0xFF0F172A);
-    final subTextCol = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final subTextCol = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
     final toggleBg = isDark ? const Color(0xFF1F2528) : const Color(0xFFF1F5F9);
 
     final size = MediaQuery.of(context).size;
@@ -243,7 +243,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     final characterLeft = (cardWidth - characterWidth) / 2.0;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0C0F10) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF0C0F10)
+          : const Color(0xFFF8FAFC),
       body: AmbientBackground(
         child: Stack(
           children: [
@@ -252,7 +254,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               child: Center(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: cardWidth),
                     child: Stack(
@@ -261,7 +266,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         // Layer 1: Ambient Neon Green Glow behind Character Head
                         Positioned(
                           top: 20,
-                          left: characterLeft + (characterWidth - (characterWidth * 0.65)) / 2,
+                          left:
+                              characterLeft +
+                              (characterWidth - (characterWidth * 0.65)) / 2,
                           child: Container(
                             width: characterWidth * 0.65,
                             height: characterWidth * 0.65,
@@ -269,7 +276,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF22C55E).withAlpha(isDark ? 60 : 35),
+                                  color: const Color(
+                                    0xFF22C55E,
+                                  ).withAlpha(isDark ? 60 : 35),
                                   blurRadius: 65,
                                   spreadRadius: 15,
                                 ),
@@ -315,7 +324,13 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             position: _cardSlideAnim,
                             child: FadeTransition(
                               opacity: _fadeAnim,
-                              child: _buildAuthCard(context, isDark, textCol, subTextCol, toggleBg),
+                              child: _buildAuthCard(
+                                context,
+                                isDark,
+                                textCol,
+                                subTextCol,
+                                toggleBg,
+                              ),
                             ),
                           ),
                         ),
@@ -373,10 +388,14 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: isDark ? const Color(0xFF1E2427) : Colors.white,
+                          color: isDark
+                              ? const Color(0xFF1E2427)
+                              : Colors.white,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isDark ? const Color(0xFF2E383C) : const Color(0xFFE2E8F0),
+                            color: isDark
+                                ? const Color(0xFF2E383C)
+                                : const Color(0xFFE2E8F0),
                             width: 1,
                           ),
                           boxShadow: [
@@ -387,7 +406,11 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             ),
                           ],
                         ),
-                        child: Icon(Icons.close_rounded, size: 20, color: textCol),
+                        child: Icon(
+                          Icons.close_rounded,
+                          size: 20,
+                          color: textCol,
+                        ),
                       ),
                     ),
                   ),
@@ -407,9 +430,13 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     Color toggleBg,
   ) {
     final cardBg = isDark ? const Color(0xFF14181A) : Colors.white;
-    final cardBorder = isDark ? const Color(0xFF22C55E).withAlpha(55) : const Color(0xFF22C55E).withAlpha(70);
+    final cardBorder = isDark
+        ? const Color(0xFF22C55E).withAlpha(55)
+        : const Color(0xFF22C55E).withAlpha(70);
     final inputBg = isDark ? const Color(0xFF1B2023) : const Color(0xFFF8FAFC);
-    final inputBorder = isDark ? const Color(0xFF2A3337) : const Color(0xFFE2E8F0);
+    final inputBorder = isDark
+        ? const Color(0xFF2A3337)
+        : const Color(0xFFE2E8F0);
 
     return Container(
       decoration: BoxDecoration(
@@ -440,23 +467,35 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             // App Badge & Header
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF22C55E).withAlpha(25),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF22C55E).withAlpha(80), width: 1),
+                  border: Border.all(
+                    color: const Color(0xFF22C55E).withAlpha(80),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF22C55E)),
+                    const Icon(
+                      Icons.bolt_rounded,
+                      size: 16,
+                      color: Color(0xFF22C55E),
+                    ),
                     const SizedBox(width: 5),
                     Text(
                       'كريدي',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A),
+                        color: isDark
+                            ? const Color(0xFF4ADE80)
+                            : const Color(0xFF16A34A),
                       ),
                     ),
                   ],
@@ -479,11 +518,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               _isRegister
                   ? 'سجّل حسابك لمزامنة مصاريفك وبياناتك سحابياً بأمان تام'
                   : 'سجّل الدخول للوصول إلى كافة معاملاتك وإعداداتك المحفوظة',
-              style: TextStyle(
-                fontSize: 13,
-                color: subTextCol,
-                height: 1.35,
-              ),
+              style: TextStyle(fontSize: 13, color: subTextCol, height: 1.35),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 22),
@@ -505,18 +540,22 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: !_isRegister
-                              ? (isDark ? const Color(0xFF22C55E) : const Color(0xFF16A34A))
+                              ? (isDark
+                                    ? const Color(0xFF22C55E)
+                                    : const Color(0xFF16A34A))
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: !_isRegister
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF22C55E).withAlpha(80),
+                                    color: const Color(
+                                      0xFF22C55E,
+                                    ).withAlpha(80),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ]
-                            : [],
+                              : [],
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -538,18 +577,22 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: _isRegister
-                              ? (isDark ? const Color(0xFF22C55E) : const Color(0xFF16A34A))
+                              ? (isDark
+                                    ? const Color(0xFF22C55E)
+                                    : const Color(0xFF16A34A))
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: _isRegister
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF22C55E).withAlpha(80),
+                                    color: const Color(
+                                      0xFF22C55E,
+                                    ).withAlpha(80),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
                                 ]
-                            : [],
+                              : [],
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -585,7 +628,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: AvatarService.avatars.length,
-                  separatorBuilder: (context, index) => const SizedBox(width: 10),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 10),
                   itemBuilder: (context, index) {
                     final avatar = AvatarService.avatars[index];
                     final isSelected = avatar == _selectedAvatar;
@@ -599,18 +643,22 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: isSelected ? const Color(0xFF22C55E) : Colors.transparent,
+                            color: isSelected
+                                ? const Color(0xFF22C55E)
+                                : Colors.transparent,
                             width: 2.5,
                           ),
                           boxShadow: isSelected
-                            ? [
-                                BoxShadow(
-                                  color: const Color(0xFF22C55E).withAlpha(90),
-                                  blurRadius: 10,
-                                  spreadRadius: 1,
-                                ),
-                              ]
-                            : [],
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF22C55E,
+                                    ).withAlpha(90),
+                                    blurRadius: 10,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : [],
                         ),
                         child: ClipOval(
                           child: Image.asset(avatar, fit: BoxFit.cover),
@@ -675,11 +723,14 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               textCol: textCol,
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  _obscurePassword
+                      ? Icons.visibility_outlined
+                      : Icons.visibility_off_outlined,
                   size: 20,
                   color: subTextCol,
                 ),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                onPressed: () =>
+                    setState(() => _obscurePassword = !_obscurePassword),
               ),
               validator: (val) {
                 if (val == null || val.isEmpty) {
@@ -746,20 +797,26 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             height: 22,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                _isRegister ? Icons.person_add_alt_1_rounded : Icons.login_rounded,
+                                _isRegister
+                                    ? Icons.person_add_alt_1_rounded
+                                    : Icons.login_rounded,
                                 size: 20,
                                 color: Colors.white,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                _isRegister ? 'إنشاء حساب ومزامنة البيانات' : 'تسجيل الدخول والمزامنة',
+                                _isRegister
+                                    ? 'إنشاء حساب ومزامنة البيانات'
+                                    : 'تسجيل الدخول والمزامنة',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -777,12 +834,27 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             // Divider
             Row(
               children: [
-                Expanded(child: Divider(color: isDark ? const Color(0xFF262C30) : const Color(0xFFE2E8F0))),
+                Expanded(
+                  child: Divider(
+                    color: isDark
+                        ? const Color(0xFF262C30)
+                        : const Color(0xFFE2E8F0),
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text('أو', style: TextStyle(color: subTextCol, fontSize: 13)),
+                  child: Text(
+                    'أو',
+                    style: TextStyle(color: subTextCol, fontSize: 13),
+                  ),
                 ),
-                Expanded(child: Divider(color: isDark ? const Color(0xFF262C30) : const Color(0xFFE2E8F0))),
+                Expanded(
+                  child: Divider(
+                    color: isDark
+                        ? const Color(0xFF262C30)
+                        : const Color(0xFFE2E8F0),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -804,11 +876,15 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
               style: OutlinedButton.styleFrom(
                 foregroundColor: textCol,
                 side: BorderSide(
-                  color: isDark ? const Color(0xFF2A3337) : const Color(0xFFCBD5E1),
+                  color: isDark
+                      ? const Color(0xFF2A3337)
+                      : const Color(0xFFCBD5E1),
                   width: 1.3,
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ],
@@ -846,7 +922,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: inputBg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 15,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: inputBorder),

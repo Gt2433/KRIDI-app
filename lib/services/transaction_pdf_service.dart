@@ -76,11 +76,9 @@ class TransactionPdfService {
       final finance = FinanceService.instance;
       final pdf = pw.Document();
 
-      // Load Arabic fonts
-      final regularFontData = await rootBundle.load('assets/fonts/NotoNaskhArabic-Regular.ttf');
-      final boldFontData = await rootBundle.load('assets/fonts/NotoNaskhArabic-Bold.ttf');
-      final ttfRegular = pw.Font.ttf(regularFontData);
-      final ttfBold = pw.Font.ttf(boldFontData);
+      // Load Cairo font which has full Unicode coverage (Arabic, English, Digits, Symbols, Brackets, and Math)
+      final cairoFontData = await rootBundle.load('assets/fonts/Cairo.ttf');
+      final ttf = pw.Font.ttf(cairoFontData);
 
       final currency = SettingsService.currencyNotifier.value;
 
@@ -124,10 +122,10 @@ class TransactionPdfService {
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
-            margin: const pw.EdgeInsets.all(24),
+            margin: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             theme: pw.ThemeData.withFont(
-              base: ttfRegular,
-              bold: ttfBold,
+              base: ttf,
+              bold: ttf,
             ),
             build: (pw.Context context) {
               return pw.Directionality(
@@ -138,11 +136,11 @@ class TransactionPdfService {
                     // Header on Page 1
                     if (isFirstPage) ...[
                       pw.Container(
-                        padding: const pw.EdgeInsets.all(16),
+                        padding: const pw.EdgeInsets.all(14),
                         decoration: pw.BoxDecoration(
                           color: PdfColors.grey100,
-                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
-                          border: pw.Border.all(color: PdfColors.grey300, width: 1),
+                          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(10)),
+                          border: pw.Border.all(color: PdfColors.grey300, width: 0.8),
                         ),
                         child: pw.Row(
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -153,32 +151,32 @@ class TransactionPdfService {
                                 pw.Text(
                                   reportTitle,
                                   style: pw.TextStyle(
-                                    font: ttfBold,
-                                    fontSize: 18,
+                                    font: ttf,
+                                    fontSize: 16,
                                     color: PdfColors.black,
                                   ),
                                 ),
-                                pw.SizedBox(height: 4),
+                                pw.SizedBox(height: 3),
                                 pw.Text(
                                   periodSubtitle,
                                   style: pw.TextStyle(
-                                    font: ttfRegular,
-                                    fontSize: 12,
+                                    font: ttf,
+                                    fontSize: 11,
                                     color: PdfColors.grey800,
                                   ),
                                 ),
                               ],
                             ),
                             pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                               decoration: const pw.BoxDecoration(
                                 color: PdfColors.blue100,
                                 borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
                               ),
                               child: pw.Text(
-                                'تطبيق كريدي ⚡',
+                                'تطبيق كريدي',
                                 style: pw.TextStyle(
-                                  font: ttfBold,
+                                  font: ttf,
                                   fontSize: 11,
                                   color: PdfColors.blue900,
                                 ),
@@ -187,7 +185,7 @@ class TransactionPdfService {
                           ],
                         ),
                       ),
-                      pw.SizedBox(height: 14),
+                      pw.SizedBox(height: 12),
 
                       // Statistics Summary Grid (4 Boxes)
                       pw.Row(
@@ -198,46 +196,42 @@ class TransactionPdfService {
                               value: '+${_formatNum(totalIncome)} $currency',
                               bgColor: PdfColors.green50,
                               textColor: PdfColors.green900,
-                              boldFont: ttfBold,
-                              regularFont: ttfRegular,
+                              font: ttf,
                             ),
                           ),
-                          pw.SizedBox(width: 8),
+                          pw.SizedBox(width: 6),
                           pw.Expanded(
                             child: _buildStatCard(
                               title: 'المصاريف',
                               value: '-${_formatNum(totalExpense)} $currency',
                               bgColor: PdfColors.red50,
                               textColor: PdfColors.red900,
-                              boldFont: ttfBold,
-                              regularFont: ttfRegular,
+                              font: ttf,
                             ),
                           ),
-                          pw.SizedBox(width: 8),
+                          pw.SizedBox(width: 6),
                           pw.Expanded(
                             child: _buildStatCard(
                               title: 'الصافي',
                               value: '${netFlow >= 0 ? "+" : ""}${_formatNum(netFlow)} $currency',
                               bgColor: netFlow >= 0 ? PdfColors.teal50 : PdfColors.amber50,
                               textColor: netFlow >= 0 ? PdfColors.teal900 : PdfColors.amber900,
-                              boldFont: ttfBold,
-                              regularFont: ttfRegular,
+                              font: ttf,
                             ),
                           ),
-                          pw.SizedBox(width: 8),
+                          pw.SizedBox(width: 6),
                           pw.Expanded(
                             child: _buildStatCard(
                               title: 'العمليات',
                               value: '${transactions.length}',
                               bgColor: PdfColors.grey100,
                               textColor: PdfColors.grey900,
-                              boldFont: ttfBold,
-                              regularFont: ttfRegular,
+                              font: ttf,
                             ),
                           ),
                         ],
                       ),
-                      pw.SizedBox(height: 14),
+                      pw.SizedBox(height: 12),
                     ] else ...[
                       // Compact Header for continuation pages
                       pw.Row(
@@ -245,28 +239,28 @@ class TransactionPdfService {
                         children: [
                           pw.Text(
                             '$reportTitle ($dateLabel)',
-                            style: pw.TextStyle(font: ttfBold, fontSize: 11, color: PdfColors.grey700),
+                            style: pw.TextStyle(font: ttf, fontSize: 10, color: PdfColors.grey700),
                           ),
                           pw.Text(
                             'تابع الصفحة ${pageIdx + 1} من ${chunks.length}',
-                            style: pw.TextStyle(font: ttfRegular, fontSize: 10, color: PdfColors.grey600),
+                            style: pw.TextStyle(font: ttf, fontSize: 9.5, color: PdfColors.grey600),
                           ),
                         ],
                       ),
                       pw.Divider(color: PdfColors.grey300, thickness: 0.8),
-                      pw.SizedBox(height: 8),
+                      pw.SizedBox(height: 6),
                     ],
 
                     // Transactions Table Title
                     pw.Text(
                       'تفاصيل المعاملات المالية (${transactions.length})',
                       style: pw.TextStyle(
-                        font: ttfBold,
-                        fontSize: 13,
+                        font: ttf,
+                        fontSize: 12,
                         color: PdfColors.black,
                       ),
                     ),
-                    pw.SizedBox(height: 8),
+                    pw.SizedBox(height: 6),
 
                     // Table
                     if (currentChunk.isEmpty)
@@ -280,33 +274,33 @@ class TransactionPdfService {
                         ),
                         child: pw.Text(
                           'لا توجد معاملات مسجلة في هذا التاريخ',
-                          style: pw.TextStyle(font: ttfRegular, fontSize: 12, color: PdfColors.grey600),
+                          style: pw.TextStyle(font: ttf, fontSize: 11, color: PdfColors.grey600),
                         ),
                       )
                     else
                       pw.Table(
                         border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.6),
                         columnWidths: const {
-                          0: pw.FlexColumnWidth(0.6), // #
-                          1: pw.FlexColumnWidth(1.4), // الوقت/التاريخ
-                          2: pw.FlexColumnWidth(2.5), // البيان
-                          3: pw.FlexColumnWidth(1.5), // التصنيف
-                          4: pw.FlexColumnWidth(1.2), // المساحة
-                          5: pw.FlexColumnWidth(1.0), // النوع
-                          6: pw.FlexColumnWidth(1.8), // المبلغ
+                          0: pw.FlexColumnWidth(0.5), // #
+                          1: pw.FlexColumnWidth(1.2), // الوقت/التاريخ
+                          2: pw.FlexColumnWidth(2.3), // البيان
+                          3: pw.FlexColumnWidth(1.4), // التصنيف
+                          4: pw.FlexColumnWidth(1.1), // المساحة
+                          5: pw.FlexColumnWidth(0.9), // النوع
+                          6: pw.FlexColumnWidth(1.6), // المبلغ
                         },
                         children: [
                           // Header Row
                           pw.TableRow(
                             decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                             children: [
-                              _buildTableCell('#', isHeader: true, font: ttfBold),
-                              _buildTableCell('الوقت / التاريخ', isHeader: true, font: ttfBold),
-                              _buildTableCell('البيان / الوصف', isHeader: true, font: ttfBold),
-                              _buildTableCell('التصنيف', isHeader: true, font: ttfBold),
-                              _buildTableCell('المساحة', isHeader: true, font: ttfBold),
-                              _buildTableCell('النوع', isHeader: true, font: ttfBold),
-                              _buildTableCell('المبلغ', isHeader: true, font: ttfBold),
+                              _buildTableCell('#', isHeader: true, font: ttf),
+                              _buildTableCell('الوقت / التاريخ', isHeader: true, font: ttf),
+                              _buildTableCell('البيان', isHeader: true, font: ttf),
+                              _buildTableCell('التصنيف', isHeader: true, font: ttf),
+                              _buildTableCell('المساحة', isHeader: true, font: ttf),
+                              _buildTableCell('النوع', isHeader: true, font: ttf),
+                              _buildTableCell('المبلغ', isHeader: true, font: ttf),
                             ],
                           ),
                           // Data Rows
@@ -339,7 +333,7 @@ class TransactionPdfService {
                               case TransactionType.transfer:
                                 typeStr = 'تحويل';
                                 amountColor = PdfColors.blue800;
-                                prefix = '⇆';
+                                prefix = '';
                                 break;
                             }
 
@@ -352,15 +346,15 @@ class TransactionPdfService {
                                 color: rowIdx % 2 == 0 ? PdfColors.grey50 : PdfColors.white,
                               ),
                               children: [
-                                _buildTableCell('$rowIdx', font: ttfRegular),
-                                _buildTableCell(dateStr, font: ttfRegular),
-                                _buildTableCell(tx.title.isNotEmpty ? tx.title : 'معاملة', font: ttfBold),
-                                _buildTableCell(catName, font: ttfRegular),
-                                _buildTableCell(wallet, font: ttfRegular),
-                                _buildTableCell(typeStr, font: ttfRegular),
+                                _buildTableCell('$rowIdx', font: ttf),
+                                _buildTableCell(dateStr, font: ttf),
+                                _buildTableCell(tx.title.isNotEmpty ? tx.title : 'معاملة', font: ttf),
+                                _buildTableCell(catName, font: ttf),
+                                _buildTableCell(wallet, font: ttf),
+                                _buildTableCell(typeStr, font: ttf),
                                 _buildTableCell(
                                   '$prefix${_formatNum(tx.amount)} $currency',
-                                  font: ttfBold,
+                                  font: ttf,
                                   textColor: amountColor,
                                 ),
                               ],
@@ -379,15 +373,15 @@ class TransactionPdfService {
                       children: [
                         pw.Text(
                           'تم الاستخراج: ${Formatters.formatExactDateTime(DateTime.now())}',
-                          style: pw.TextStyle(font: ttfRegular, fontSize: 8.5, color: PdfColors.grey600),
+                          style: pw.TextStyle(font: ttf, fontSize: 8.5, color: PdfColors.grey600),
                         ),
                         pw.Text(
                           'صفحة ${pageIdx + 1} من ${chunks.length}',
-                          style: pw.TextStyle(font: ttfBold, fontSize: 8.5, color: PdfColors.grey700),
+                          style: pw.TextStyle(font: ttf, fontSize: 8.5, color: PdfColors.grey700),
                         ),
                         pw.Text(
                           'كريدي (KRIDI) - تقرير مالي شخصي',
-                          style: pw.TextStyle(font: ttfRegular, fontSize: 8.5, color: PdfColors.grey600),
+                          style: pw.TextStyle(font: ttf, fontSize: 8.5, color: PdfColors.grey600),
                         ),
                       ],
                     ),
@@ -413,32 +407,38 @@ class TransactionPdfService {
     }
   }
 
+  static String _cleanPdfText(String text) {
+    // Strip emojis and non-BMP symbols that PDF TTF fonts cannot render
+    return text
+        .replaceAll(RegExp(r'[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}]', unicode: true), '')
+        .trim();
+  }
+
   static pw.Widget _buildStatCard({
     required String title,
     required String value,
     required PdfColor bgColor,
     required PdfColor textColor,
-    required pw.Font boldFont,
-    required pw.Font regularFont,
+    required pw.Font font,
   }) {
     return pw.Container(
-      padding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+      padding: const pw.EdgeInsets.symmetric(vertical: 7, horizontal: 4),
       decoration: pw.BoxDecoration(
         color: bgColor,
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-        border: pw.Border.all(color: PdfColors.grey300, width: 0.8),
+        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+        border: pw.Border.all(color: PdfColors.grey300, width: 0.6),
       ),
       child: pw.Column(
         children: [
           pw.Text(
             title,
-            style: pw.TextStyle(font: regularFont, fontSize: 9.5, color: PdfColors.grey700),
+            style: pw.TextStyle(font: font, fontSize: 8.5, color: PdfColors.grey700),
             textAlign: pw.TextAlign.center,
           ),
-          pw.SizedBox(height: 3),
+          pw.SizedBox(height: 2),
           pw.Text(
             value,
-            style: pw.TextStyle(font: boldFont, fontSize: 11, color: textColor),
+            style: pw.TextStyle(font: font, fontSize: 9.5, color: textColor),
             textAlign: pw.TextAlign.center,
           ),
         ],
@@ -453,13 +453,13 @@ class TransactionPdfService {
     PdfColor textColor = PdfColors.black,
   }) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 4.5),
       child: pw.Text(
-        text,
+        _cleanPdfText(text),
         textAlign: pw.TextAlign.center,
         style: pw.TextStyle(
           font: font,
-          fontSize: isHeader ? 9.5 : 8.5,
+          fontSize: isHeader ? 8.5 : 7.8,
           color: isHeader ? PdfColors.black : textColor,
         ),
       ),
