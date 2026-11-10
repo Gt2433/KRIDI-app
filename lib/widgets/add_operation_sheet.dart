@@ -68,9 +68,9 @@ class _AddOperationSheetState extends State<AddOperationSheet>
   final _debtPhoneController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
-  late String _selectedWalletId;
+  String _selectedWalletId = 'cash';
   String? _selectedToWalletId;
-  late String _selectedCategoryId;
+  String _selectedCategoryId = 'other';
   DebtType _debtType = DebtType.fromMe; // Default: عليّ (أنا مدين)
 
   bool _isSuccess = false;
